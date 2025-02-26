@@ -35,6 +35,6 @@
     // "source=/run/host-services/ssh-auth.sock,target=/run/host-services/ssh-auth.sock,type=bind",
     "source=${localWorkspaceFolderBasename}-api-node_modules,target=${containerWorkspaceFolder}/api/node_modules,type=volume",
     "source=${localWorkspaceFolderBasename}-swa-node_modules,target=${containerWorkspaceFolder}/swa/node_modules,type=volume"
-  ],
-  "postCreateCommand": "task npm-install"
+  ]
+  // "postCreateCommand": "task npm-install"
 }

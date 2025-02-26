@@ -3,8 +3,14 @@ version: "3"
 tasks:
   npm-install:
     cmds:
-      - cd api && npm install
-      - cd swa && npm install
+      - |
+        cd api && \
+        sudo chown codespace:codespace node_modules && \
+        npm install
+      - |
+        cd swa && \
+        sudo chown codespace:codespace node_modules && \
+        npm install
 
   build:
     cmds:
