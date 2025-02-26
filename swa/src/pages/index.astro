@@ -49,6 +49,7 @@ const gists = await loadGistsOfPastYear();
 		<p id="quote" class="quote animate-bottom" style="display:none;">
 			<a id="quote-text" role="article" aria-label="Quote of the day"></a></br><strong><a id="quote-author" role="article" aria-label="Author of the quote of the day"></a></strong>
 		</p>
+		<hr class="divider" />
 		<CardGrid
 			title="My recent GitHub repositories"
 			cards={repos.map((repo: { name: any; description: any; html_url: any }) => ({
@@ -57,6 +58,7 @@ const gists = await loadGistsOfPastYear();
 				href: repo.html_url
 		}))}
 		/>
+		<hr class="divider" />
 		<CardGrid
 			title="My recent GitHub Gists"
 			cards={gists.map((gist: { id: any; description: string; html_url: string }) => ({
@@ -93,6 +95,13 @@ const gists = await loadGistsOfPastYear();
 		-webkit-text-fill-color: transparent;
 		background-size: 400%;
 		background-position: 0%;
+	}
+	/* Divider */
+	.divider {
+		border: 0;
+		height: 1px;
+		margin: 2rem 0;
+		background: linear-gradient(to right, rgba(var(--accent-light), 0), rgba(var(--accent-light), 0.75), rgba(var(--accent-light), 0));
 	}
 	/* Profile Picture */
 	.profile-picture {
