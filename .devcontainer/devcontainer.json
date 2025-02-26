@@ -17,8 +17,8 @@
       ]
     },
     "settings": {
-      "terminal.integrated.shell.linux": "/bin/bash",
-      "remote.containers.copyGitConfig": true
+      "terminal.integrated.shell.linux": "/bin/bash"
+      // "remote.containers.copyGitConfig": true
     }
   },
   "dockerFile": "Dockerfile",
