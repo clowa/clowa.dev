@@ -1,6 +1,16 @@
 version: "3"
 
 tasks:
+  npm-update:
+    dir: swa/
+    cmds:
+      - container run --rm -it -v $(pwd):/app -w /app node:24 npm update
+
+  astor-upgrade:
+    dir: api/
+    cmds:
+      - container run --rm -it -v $(pwd):/app -w /app node:24 npx @astrojs/upgrade
+
   npm-install:
     cmds:
       - |
