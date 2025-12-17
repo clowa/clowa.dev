@@ -1,4 +1,9 @@
 import { defineConfig } from 'astro/config';
+import { remarkAlert } from "remark-github-blockquote-alert";
 
 // https://astro.build/config
-export default defineConfig({});
+export default defineConfig({
+    markdown: {
+    remarkPlugins: [remarkAlert],
+  },
+});
