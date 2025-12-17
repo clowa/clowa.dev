@@ -16,9 +16,9 @@ const { frontmatter } = Astro.props;
         max-width: 1000px;
         margin: 2rem auto;
         padding: 2rem;
-        background-color: var(--contrast-dark);
+        background-color: rgb(var(--contrast-dark));
         border-radius: 1.25rem;
-        box-shadow: 0 4px 24px 0 var(--contrast-light);
+        box-shadow: 0 4px 24px 0 rgb(var(--contrast-light));
       }
       header.blog-header {
         margin-bottom: 2rem;
@@ -30,7 +30,7 @@ const { frontmatter } = Astro.props;
       article.blog-content {
         padding: 1.6rem;
         margin-bottom: 2rem;
-        background-color: var(--contrast);
+        background-color: rgb(var(--contrast));
         border-radius: 1.25rem;
         overflow-wrap: break-word;
         font-size: 0.9rem;
@@ -40,7 +40,7 @@ const { frontmatter } = Astro.props;
         font-size: 0.6rem !important;
       }
       footer.blog-footer {
-        border-top: 1px solid var(--pico-muted-border-color, #eee);
+        border-top: 1px solid rgb(var(--accent-light, #eee));
         padding-top: 1.5rem;
         text-align: center;
         color: rgb(var(--accent-light));
