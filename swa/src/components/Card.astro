@@ -8,14 +8,6 @@ interface Props {
 const { href, title, body } = Astro.props;
 ---
 
-<li class="link-card">
-	<a href={href}>
-		{title && <h2>{title}</h2>}
-		<p class={!title ? 'full-space' : ''}>
-			{body}
-		</p>
-	</a>
-</li>
 <style>
 	.link-card {
 		list-style: none;
@@ -59,3 +51,12 @@ const { href, title, body } = Astro.props;
 		color: rgb(var(--accent-light));
 	}
 </style>
+
+<li class="link-card">
+	<a href={href}>
+		{title && <h2>{title}</h2>}
+		<p class={!title ? 'full-space' : ''}>
+			{body}
+		</p>
+	</a>
+</li>

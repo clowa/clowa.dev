@@ -13,17 +13,6 @@ interface Props {
 const { title, cards } = Astro.props;
 ---
 
-<section class="section-container">
-  <div class="content-wrapper">
-    <h2 class="section-title">{title}</h2>
-    <div class="repositories-grid">
-      {cards.map((card) => (
-        <Card {...card} />
-      ))}
-    </div>
-  </div>
-</section>
-
 <style>
 /* Container for the entire section */
 .section-container {
@@ -60,3 +49,14 @@ const { title, cards } = Astro.props;
   }
 }
 </style>
+
+<section class="section-container">
+  <div class="content-wrapper">
+    <h2 class="section-title">{title}</h2>
+    <div class="repositories-grid">
+      {cards.map((card) => (
+        <Card {...card} />
+      ))}
+    </div>
+  </div>
+</section>
