@@ -3,7 +3,9 @@ import { remarkAlert } from "remark-github-blockquote-alert";
 
 // https://astro.build/config
 export default defineConfig({
-    markdown: {
+  site: 'https://clowa.dev',
+  markdown: {
     remarkPlugins: [remarkAlert],
   },
+  
 });
