@@ -1,0 +1,65 @@
+---
+// 1. The frontmatter prop gives access to frontmatter and other data
+const { frontmatter } = Astro.props;
+---
+<html lang="en">
+  <head>
+    <title>{frontmatter.title}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+    <style>
+      main.container {
+        max-width: 1000px;
+        margin: 2rem auto;
+        padding: 2rem;
+        border-radius: 1.25rem;
+        box-shadow: 0 4px 24px 0 var(--pico-muted-border-color); /* or rgba(0, 0, 0, 0.1) */
+      }
+      header.blog-header {
+        margin-bottom: 2rem;
+        text-align: center;
+      }
+      .meta {
+        color: var(--pico-muted-color, #888);
+      }
+      article.blog-content {
+        padding: 1.6rem;
+        margin-bottom: 2rem;
+        overflow-wrap: break-word;
+        font-size: 0.9rem;
+      }
+      article.blog-content h2 {
+        /* --pico-font-size: 0.6rem !important;
+        font-size: 0.6rem !important; */
+      }
+      /* blockquote {
+        background-color: var(--pico-muted-background-color, #f9f9f9);
+      } */
+      footer.blog-footer {
+        border-top: 1px solid var(--pico-muted-border-color, #eee);
+        padding-top: 1.5rem;
+        text-align: center;
+        color: var(--pico-muted-color, #888);
+        /* font-size: 0.95rem; */
+      }
+    </style>
+  </head>
+  <body>
+    <main class="container">
+      <header class="blog-header">
+        <h1>{frontmatter.title}</h1>
+        <div class="meta">
+          By {frontmatter.author} &middot; {new Date(frontmatter.pubDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}
+        </div>
+      </header>
+      <article class="blog-content">
+        <slot /> <!-- Markdown content is injected here -->
+      </article>
+      <footer class="blog-footer">
+        © {new Date().getFullYear()} {frontmatter.author} — All rights reserved.
+      </footer>
+    </main>
+  </body>
+</html>
