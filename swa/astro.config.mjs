@@ -6,4 +6,5 @@ export default defineConfig({
     markdown: {
     remarkPlugins: [remarkAlert],
   },
+  site: 'https://clowa.dev',
 });
