@@ -13,7 +13,7 @@
 
 html {
   font-family: system-ui, sans-serif;
-  background: var(--contrast);
+  background: rgb(var(--contrast));
 }
 
 code {
