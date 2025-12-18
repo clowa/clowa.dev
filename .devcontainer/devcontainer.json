@@ -33,7 +33,8 @@
   "forwardPorts": [4280, 7071],
   "features": {
     "ghcr.io/devcontainers-contrib/features/go-task:1": {},
-    "ghcr.io/dhoeric/features/trivy:1": {}
+    "ghcr.io/dhoeric/features/trivy:1": {},
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "mounts": [
     "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,readonly",
