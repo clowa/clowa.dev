@@ -21,7 +21,12 @@
       // "remote.containers.copyGitConfig": true
     }
   },
-  "dockerFile": "Dockerfile",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "NODE_VERSION": "22"
+    }
+  },
   "containerUser": "codespace",
   "remoteUser": "codespace",
   "appPort": 4280,
@@ -29,7 +34,7 @@
   "features": {
     "ghcr.io/devcontainers-contrib/features/go-task:1": {},
     "ghcr.io/dhoeric/features/trivy:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1" : {}
+    "ghcr.io/devcontainers/features/github-cli:1": {}
   },
   "mounts": [
     "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,readonly",
