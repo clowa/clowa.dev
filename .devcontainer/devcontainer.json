@@ -24,7 +24,7 @@
   "build": {
     "dockerfile": "Dockerfile",
     "args": {
-      "NODE_VERSION": "24"
+      "NODE_VERSION": "22"
     }
   },
   "containerUser": "codespace",
@@ -33,7 +33,7 @@
   "forwardPorts": [4280, 7071],
   "features": {
     "ghcr.io/devcontainers-contrib/features/go-task:1": {},
-    "ghcr.io/devcontainers-contrib/features/trivy:1": {}
+    "ghcr.io/dhoeric/features/trivy:1": {}
   },
   "mounts": [
     "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,readonly",
