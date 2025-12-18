@@ -21,7 +21,12 @@
       // "remote.containers.copyGitConfig": true
     }
   },
-  "dockerFile": "Dockerfile",
+  "build": {
+    "dockerfile": "Dockerfile",
+    "args": {
+      "NODE_VERSION": "24"
+    }
+  },
   "containerUser": "codespace",
   "remoteUser": "codespace",
   "appPort": 4280,
