@@ -49,7 +49,7 @@ jobs:
           ###### End of Repository/Build Configurations ######
           app_build_command: "npm run build"
         env: # Put a node version on the following line
-          NODE_VERSION: 18
+          NODE_VERSION: 22
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
