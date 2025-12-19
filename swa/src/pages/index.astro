@@ -12,6 +12,7 @@ import  loadRepositories  from '../scripts/loadRepositories.js';
 import loadGistsOfPastYear from '../scripts/loadGistsOfPastYear.js';
 
 const repos = await loadRepositories(['clowa.dev', 'my-setup', 'docker-terraform', 'docker-powershell-core', 'arduino-plant-watering', 'golang-custom-rpi-exporter']);
+const posts = Object.values(import.meta.glob('./posts/*.md', { eager: true }));
 const gists = await loadGistsOfPastYear();
 ---
 
@@ -53,12 +54,23 @@ const gists = await loadGistsOfPastYear();
 		</p>
 		<hr class="divider" />
 		<CardGrid
-			title="My recent GitHub repositories"
+			title="My GitHub repositories"
 			cards={repos.map((repo: { name: any; description: any; html_url: any }) => ({
 				title: repo.name,
 				body: repo.description,
 				href: repo.html_url
 		}))}
+		/>
+		<hr class="divider" />
+		<CardGrid
+				title="My Blog Posts"
+				cards={posts
+					.filter((post: any) => post.url)
+					.map((post: any) => ({
+						title: post.frontmatter.title,
+						body: post.frontmatter.description,
+						href: post.url
+					}))}
 		/>
 		<hr class="divider" />
 		<CardGrid
