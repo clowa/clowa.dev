@@ -30,7 +30,7 @@ const postFiles = import.meta.glob('./posts/*.md', { eager: true });
 const allPosts = Object.values(postFiles);
 // Filter out draft posts and sort by pubDate (newest first)
 const publishedPosts = allPosts
-	.filter((post: any) => !post.frontmatter.draft)
+	.filter((post: any) => post.frontmatter.draft !== true)
 	.sort((a: any, b: any) => new Date(b.frontmatter.pubDate).valueOf() - new Date(a.frontmatter.pubDate).valueOf());
 ---
 
@@ -73,11 +73,13 @@ const publishedPosts = allPosts
 		<hr class="divider" />
 		<CardGrid
 			title="My recent blog posts"
-			cards={publishedPosts.map((post: any) => ({
-				title: post.frontmatter.title,
-				body: post.frontmatter.description,
-				href: post.url || ''
-		}))}
+			cards={publishedPosts
+				.filter((post: any) => post.url)
+				.map((post: any) => ({
+					title: post.frontmatter.title,
+					body: post.frontmatter.description,
+					href: post.url
+			}))}
 		/>
 		<hr class="divider" />
 		<CardGrid
