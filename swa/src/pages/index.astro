@@ -11,8 +11,27 @@ import profilePicture from '../images/profile-picture.jpg';
 import  loadRepositories  from '../scripts/loadRepositories.js';
 import loadGistsOfPastYear from '../scripts/loadGistsOfPastYear.js';
 
-const repos = await loadRepositories(['clowa.dev', 'my-setup', 'docker-terraform', 'docker-powershell-core', 'arduino-plant-watering', 'golang-custom-rpi-exporter']);
-const gists = await loadGistsOfPastYear();
+// Handle API failures gracefully for demo purposes
+let repos = [];
+let gists = [];
+try {
+	repos = await loadRepositories(['clowa.dev', 'my-setup', 'docker-terraform', 'docker-powershell-core', 'arduino-plant-watering', 'golang-custom-rpi-exporter']);
+} catch (e) {
+	console.warn('Failed to load repositories:', e);
+}
+try {
+	gists = await loadGistsOfPastYear();
+} catch (e) {
+	console.warn('Failed to load gists:', e);
+}
+
+// Load blog posts dynamically from the posts directory
+const postFiles = import.meta.glob('./posts/*.md', { eager: true });
+const allPosts = Object.values(postFiles);
+// Filter out draft posts and sort by pubDate (newest first)
+const publishedPosts = allPosts
+	.filter((post: any) => !post.frontmatter.draft)
+	.sort((a: any, b: any) => new Date(b.frontmatter.pubDate).valueOf() - new Date(a.frontmatter.pubDate).valueOf());
 ---
 
 <Layout title="Cedric Ahlers">
@@ -51,6 +70,15 @@ const gists = await loadGistsOfPastYear();
 		<p id="quote" class="quote animate-bottom" style="display:none;">
 			<a id="quote-text" role="article" aria-label="Quote of the day"></a></br><strong><a id="quote-author" role="article" aria-label="Author of the quote of the day"></a></strong>
 		</p>
+		<hr class="divider" />
+		<CardGrid
+			title="My recent blog posts"
+			cards={publishedPosts.map((post: any) => ({
+				title: post.frontmatter.title,
+				body: post.frontmatter.description,
+				href: post.url || ''
+		}))}
+		/>
 		<hr class="divider" />
 		<CardGrid
 			title="My recent GitHub repositories"
