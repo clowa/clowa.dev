@@ -1,28 +1,38 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import CardGrid from '../components/CardGrid.astro';
 import SocialBubble from '../components/SocialBubble.astro';
 // add font awesome icons
-import { faGithub, faPaypal, faStackOverflow } from '@fortawesome/free-brands-svg-icons'
+import { faGithub, faPaypal, faStackOverflow } from '@fortawesome/free-brands-svg-icons';
 // import the Image component and the image
 import { Image } from 'astro:assets';
-import CardGrid from '../components/CardGrid.astro'
+import profilePicture from '../images/profile-picture.jpg';
 // import custom scripts
 import  loadRepositories  from '../scripts/loadRepositories.js';
 import loadGistsOfPastYear from '../scripts/loadGistsOfPastYear.js';
 
 const repos = await loadRepositories(['clowa.dev', 'my-setup', 'docker-terraform', 'docker-powershell-core', 'arduino-plant-watering', 'golang-custom-rpi-exporter']);
 const gists = await loadGistsOfPastYear();
+
+// Load blog posts dynamically from the posts directory
+const postFiles = import.meta.glob('./posts/*.md', { eager: true });
+const allPosts = Object.values(postFiles);
+// Filter out draft posts and sort by pubDate (newest first)
+const publishedPosts = allPosts
+	.filter((post: any) => post.frontmatter.draft !== true)
+	.sort((a: any, b: any) => new Date(b.frontmatter.pubDate).valueOf() - new Date(a.frontmatter.pubDate).valueOf());
 ---
 
 <Layout title="Cedric Ahlers">
 	<main>
 		<div class="profile-picture">
 			<Image
-				src="/images/profile-picture.jpg"
+				src={profilePicture}
 				alt="Cedric Ahlers"
 				width="1659"
 				height="2034"
-				loading="eager"
+				priority
+				quality="max"
 			/>
 		</div>
 		<h1>Nice to meet you 👋🏻 </br>I'm <span class="text-gradient">Cedric</span></h1>
@@ -51,7 +61,18 @@ const gists = await loadGistsOfPastYear();
 		</p>
 		<hr class="divider" />
 		<CardGrid
-			title="My recent GitHub repositories"
+				title="My recent Blog Posts"
+				cards={publishedPosts
+					.filter((post: any) => post.url)
+					.map((post: any) => ({
+						title: post.frontmatter.title,
+						body: post.frontmatter.description,
+						href: post.url
+					}))}
+		/>
+		<hr class="divider" />
+		<CardGrid
+			title="My GitHub repositories"
 			cards={repos.map((repo: { name: any; description: any; html_url: any }) => ({
 				title: repo.name,
 				body: repo.description,

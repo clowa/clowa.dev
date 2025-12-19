@@ -2,19 +2,18 @@
   --accent: 75, 70, 232;
   --accent-light: 105, 129, 235;
   --accent-dark: 25, 11, 120;
-  --accent-gradient: linear-gradient(
-    45deg,
-    rgb(var(--accent)),
-    rgb(var(--accent-light)) 50%,
-    white 60%
-  );
-  --contrast: #292a2d;
-  --contrast-dark: #23262d;
+  --accent-gradient: linear-gradient(45deg,
+      rgb(var(--accent)),
+      rgb(var(--accent-light)) 50%,
+      white 60%);
+  --contrast: 41, 42, 45;
+  --contrast-dark: 35, 38, 45;
+  --contrast-light: 52, 58, 70;
 }
 
 html {
   font-family: system-ui, sans-serif;
-  background: var(--contrast);
+  background: rgb(var(--contrast));
 }
 
 code {
