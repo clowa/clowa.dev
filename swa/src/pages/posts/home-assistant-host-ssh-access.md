@@ -8,7 +8,7 @@ author: 'Clowa'
 image:
     url: 'https://docs.astro.build/assets/rose.webp'
     alt: 'The Astro logo on a dark background with a pink glow.'
-tags: ["home assistant", "ssh", "tutorial"]
+tags: ["home assistant", "SSH", "tutorial"]
 ---
 
 If you're looking to access the Host of your Home Assistant via SSH for development or troubleshooting purposes, this guide will walk you through the necessary steps.
