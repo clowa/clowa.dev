@@ -1,6 +1,5 @@
 ---
 import "../styles/base.css";
-import "../styles/pico.css";
 import "remark-github-blockquote-alert/alert.css";
 // 1. The frontmatter prop gives access to frontmatter and other data
 const { frontmatter } = Astro.props;
@@ -11,6 +10,7 @@ const { frontmatter } = Astro.props;
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="color-scheme" content="light dark">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
     <style>
       main.container {
         max-width: 1000px;
