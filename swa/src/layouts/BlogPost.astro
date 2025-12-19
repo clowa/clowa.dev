@@ -34,6 +34,8 @@ const { frontmatter } = Astro.props;
         border-radius: 1.25rem;
         overflow-wrap: break-word;
         font-size: 0.9rem;
+        /* explicitly remove box-shadow to overwrite pico.css */
+        box-shadow: none !important;
       }
       article.blog-content>h2 {
         --pico-font-size: 0.6rem !important;
