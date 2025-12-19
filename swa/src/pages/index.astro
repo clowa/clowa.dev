@@ -12,8 +12,15 @@ import  loadRepositories  from '../scripts/loadRepositories.js';
 import loadGistsOfPastYear from '../scripts/loadGistsOfPastYear.js';
 
 const repos = await loadRepositories(['clowa.dev', 'my-setup', 'docker-terraform', 'docker-powershell-core', 'arduino-plant-watering', 'golang-custom-rpi-exporter']);
-const posts = Object.values(import.meta.glob('./posts/*.md', { eager: true }));
 const gists = await loadGistsOfPastYear();
+
+// Load blog posts dynamically from the posts directory
+const postFiles = import.meta.glob('./posts/*.md', { eager: true });
+const allPosts = Object.values(postFiles);
+// Filter out draft posts and sort by pubDate (newest first)
+const publishedPosts = allPosts
+	.filter((post: any) => post.frontmatter.draft !== true)
+	.sort((a: any, b: any) => new Date(b.frontmatter.pubDate).valueOf() - new Date(a.frontmatter.pubDate).valueOf());
 ---
 
 <Layout title="Cedric Ahlers">
@@ -63,8 +70,8 @@ const gists = await loadGistsOfPastYear();
 		/>
 		<hr class="divider" />
 		<CardGrid
-				title="My Blog Posts"
-				cards={posts
+				title="My recent Blog Posts"
+				cards={publishedPosts
 					.filter((post: any) => post.url)
 					.map((post: any) => ({
 						title: post.frontmatter.title,
