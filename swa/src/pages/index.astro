@@ -9,10 +9,10 @@ import { Image } from 'astro:assets';
 import profilePicture from '../images/profile-picture.jpg';
 // import custom scripts
 import  loadRepositories  from '@scripts/loadRepositories.js';
-import loadGistsOfPastYear from '@scripts/loadGistsOfPastYear.js';
+import loadGistsSinceYear from '@scripts/loadGistsSinceYear.ts';
 
 const repos = await loadRepositories(['clowa.dev', 'my-setup', 'docker-terraform', 'docker-powershell-core', 'arduino-plant-watering', 'golang-custom-rpi-exporter']);
-const gists = await loadGistsOfPastYear();
+const gists = await loadGistsSinceYear(2025);
 
 // Load blog posts dynamically from the posts directory
 const postFiles = import.meta.glob('./posts/*.md', { eager: true });
@@ -82,7 +82,8 @@ const publishedPosts = allPosts
 		<hr class="divider" />
 		<CardGrid
 			title="My recent GitHub Gists"
-			cards={gists.map((gist: { id: any; description: string; html_url: string }) => ({
+			cards={gists.map(gist => ({
+				title: "",
 				body: gist.description,
 				href: gist.html_url
 		}))}
