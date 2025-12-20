@@ -3,3 +3,6 @@
 
 # files with potential sensitive information
 **/.env
+
+# go-task caching
+.task/
