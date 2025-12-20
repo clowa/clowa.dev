@@ -8,8 +8,8 @@ import { faGithub, faPaypal, faStackOverflow } from '@fortawesome/free-brands-sv
 import { Image } from 'astro:assets';
 import profilePicture from '../images/profile-picture.jpg';
 // import custom scripts
-import  loadRepositories  from '../scripts/loadRepositories.js';
-import loadGistsOfPastYear from '../scripts/loadGistsOfPastYear.js';
+import  loadRepositories  from '@scripts/loadRepositories.js';
+import loadGistsOfPastYear from '@scripts/loadGistsOfPastYear.js';
 
 const repos = await loadRepositories(['clowa.dev', 'my-setup', 'docker-terraform', 'docker-powershell-core', 'arduino-plant-watering', 'golang-custom-rpi-exporter']);
 const gists = await loadGistsOfPastYear();
@@ -90,7 +90,7 @@ const publishedPosts = allPosts
 	</main>
 </Layout>
 
-<script src="../scripts/loadQuote.js"></script>
+<script src="@scripts/loadQuote.js"></script>
 
 <style>
 	/* General */
