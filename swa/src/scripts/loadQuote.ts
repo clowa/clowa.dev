@@ -1,5 +1,5 @@
 // Timeout for http call
-// GetQuote API can take up to 30 seconds on a double cold start
+// Quote API can take up to 30 seconds on a double cold start
 const timeout: number = 8000
 
 interface Quote {
@@ -25,7 +25,7 @@ console.log("Detected website name " + canonicalURL)
 try {
   const controller = new AbortController()
   const id = setTimeout(() => controller.abort(), timeout)
-  const url = canonicalURL + "/api/getQuote"
+  const url = canonicalURL + "/api/quote"
   console.info(`Fetching quote from: ${url}`)
   const response = await fetch(url, { signal: controller.signal })
   clearTimeout(id)
