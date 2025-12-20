@@ -8,7 +8,7 @@ import { faGithub, faPaypal, faStackOverflow } from '@fortawesome/free-brands-sv
 import { Image } from 'astro:assets';
 import profilePicture from '../images/profile-picture.jpg';
 // import custom scripts
-import  loadRepositories  from '@scripts/loadRepositories.js';
+import  loadRepositories  from '@scripts/loadRepositories.ts';
 import loadGistsSinceYear from '@scripts/loadGistsSinceYear.ts';
 
 const repos = await loadRepositories(['clowa.dev', 'my-setup', 'docker-terraform', 'docker-powershell-core', 'arduino-plant-watering', 'golang-custom-rpi-exporter']);
