@@ -1,5 +1,5 @@
 ---
-layout: '../../layouts/BlogPost.astro'
+layout: '@layouts/BlogPost.astro'
 title: 'Accessing Home Assistant via SSH'
 draft: false
 pubDate: 2025-12-17
