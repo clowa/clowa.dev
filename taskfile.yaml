@@ -39,16 +39,9 @@ tasks:
       - swa/dist/**
       - swa/node_modules/**
 
-  build-devserver:
-    cmds:
-      - |
-        swa build \
-          --api-location api/ \
-          --api-build-command 'cd {{.TASKFILE_DIR}}/api && npm run watch' \
-          --app-location swa/ \
-          --app-build-command 'cd {{.TASKFILE_DIR}}/swa && npm run build'
-
-  run:
+  # Due to an issue in the swa CLI the function app isn't started therefore no api endpoints.
+  # Use task run for a static build of the web app with working api endpoints.
+  run-devserver:
     deps:
       - build
     cmds:
@@ -58,5 +51,19 @@ tasks:
         swa start \
           --app-location {{.TASKFILE_DIR}}/swa/ \
           --app-devserver-url http://localhost:4321 \
+          --api-location {{.TASKFILE_DIR}}/api/ \
+          --run 'npm run dev'
+
+  # Spins up the static web app and the function apps
+  # No live reloading !!!
+  run:
+    deps:
+      - build
+    cmds:
+      - |
+        PATH="/opt/homebrew/opt/node@18/bin:$PATH"
+        source .env
+        swa start \
+          --app-location {{.TASKFILE_DIR}}/swa/ \
           --api-location {{.TASKFILE_DIR}}/api/ \
           --run 'npm run dev'
