@@ -1,0 +1,33 @@
+---
+import IconLink from '@components/IconLink.astro';
+import type { Props as IconLinkProps } from '@components/IconLink.astro';
+
+interface Props {
+  icons: IconLinkProps[]
+}
+
+const { icons } = Astro.props;
+---
+
+<div class="icon-link-grid">
+  <ul role="list">    
+    {icons.map(i => (
+      <IconLink
+        brand={i.brand}
+        href={i.href}
+        icon={i.icon}
+      />
+    ))}
+  </ul>
+</div>
+
+<style>
+	.icon-link-grid {
+		text-align: center;
+	}
+	.icon-link-grid ul {
+		display: inline-flex;
+		gap: 2rem;
+		padding: 0;
+	}
+</style>

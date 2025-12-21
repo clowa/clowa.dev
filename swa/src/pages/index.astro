@@ -2,7 +2,7 @@
 import Layout from '@layouts/Layout.astro';
 import Footer from '@components/Footer.astro';
 import CardGrid from '@components/CardGrid.astro';
-import SocialBubble from '@components/SocialBubble.astro';
+import IconList from '@components/IconList.astro';
 
 // add font awesome icons
 import { faGithub, faPaypal, faStackOverflow } from '@fortawesome/free-brands-svg-icons';
@@ -38,25 +38,25 @@ const publishedPosts = allPosts
 			/>
 		</div>
 		<h1>Nice to meet you 👋🏻 </br>I'm <span class="text-gradient">Cedric</span></h1>
-		<div class="social-link-grid">
-			<ul role="list">
-				<SocialBubble
-					brand="github"
-					href="https://github.com/clowa"
-					icon={faGithub}
-				/>
-				<SocialBubble
-					brand="stack-overflow"
-					href="https://stackoverflow.com/users/13078586"
-					icon={faStackOverflow}
-				/>
-				<SocialBubble
-					brand="paypal"
-					href="https://paypal.me/cedricahlers"
-					icon={faPaypal}
-				/>
-			</ul>
-		</div>
+		<IconList
+			icons={[
+				{
+					brand: "github",
+					href: "https://github.com/clowa",
+					icon: faGithub
+				},
+				{
+					brand: "stack-overflow",
+					href: "https://stackoverflow.com/users/13078586",
+					icon: faStackOverflow
+				},
+				{
+					brand: "paypal",
+					href: "https://paypal.me/cedricahlers",
+					icon: faPaypal
+				}
+			]}
+		/>
 		<div id="quote-loader" class="pulsar"></div>
 		<p id="quote" class="quote animate-bottom" style="display:none;">
 			<a id="quote-text" role="article" aria-label="Quote of the day"></a></br><strong><a id="quote-author" role="article" aria-label="Author of the quote of the day"></a></strong>
@@ -201,14 +201,5 @@ const publishedPosts = allPosts
 	}
 	.quote strong {
 		color: rgb(var(--accent-light));
-	}
-	/* Social Links */
-	.social-link-grid {
-		text-align: center;
-	}
-	.social-link-grid ul {
-		display: inline-flex;
-		gap: 2rem;
-		padding: 0;
 	}
 </style>
