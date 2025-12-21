@@ -1,7 +1,9 @@
 ---
 import Layout from '@layouts/Layout.astro';
+import Footer from '@components/Footer.astro';
 import CardGrid from '@components/CardGrid.astro';
 import SocialBubble from '@components/SocialBubble.astro';
+
 // add font awesome icons
 import { faGithub, faPaypal, faStackOverflow } from '@fortawesome/free-brands-svg-icons';
 // import the Image component and the image
@@ -90,6 +92,7 @@ const publishedPosts = allPosts
 		/>
 	</main>
 </Layout>
+<Footer />
 
 <script src="@scripts/loadQuote.ts"></script>
 
