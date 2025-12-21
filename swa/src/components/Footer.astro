@@ -1,8 +1,13 @@
 ---
+interface Props {
+	text: string;
+}
+
+const { text } = Astro.props;
 ---
 
 <footer>
-  <p>Assembled with no clue, Astro magic and Pico.css.</p>
+  <p>{text}</p>
 </footer>
 
 <style>
