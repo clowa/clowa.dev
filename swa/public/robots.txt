@@ -1,5 +1,9 @@
+# This robots.txt file provides crawling instructions for web crawlers (user-agents).
+# Rule order: In robots.txt, the most specific rule for a given path takes precedence.
+
 User-agent: *
 Allow: /
+Disallow: /api/
 
 # crawling rule(s) for above bots
 # Sitemap: https://clowa.dev/sitemap-index.xml
