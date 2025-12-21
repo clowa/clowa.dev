@@ -1,3 +1,5 @@
+import { logger } from './logger'
+
 interface Gist {
   id: any
   description: string
@@ -17,21 +19,23 @@ async function loadGistsSinceYear(year: number, month: number = 0, day: number =
   const yearString = new Date(new Date().setFullYear(year, month, day)).toISOString()
   const url = `https://api.github.com/users/clowa/gists?since=${yearString}`
 
-  console.log(`Fetching gists since: ${yearString} from URL: ${url}`)
+  logger.request('GET', url)
 
   const response = await fetch(url, {
     headers: headers,
   })
 
   if (!response.ok) {
+    logger.response(response.status, response.statusText, url)
     throw new Error(`Network response was not ok ${response.statusText}`)
   }
+  logger.response(response.status, response.statusText, url)
 
   const gists: Gist[] = await response.json()
 
-  // Print properties description and html_url for gists to console
+  // Log fetched gists
   gists.forEach((gist: Gist) => {
-    console.log(gist.description, gist.html_url)
+    logger.debug(`Gist: ${gist.description}`, { url: gist.html_url })
   })
 
   return gists

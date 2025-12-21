@@ -1,3 +1,5 @@
+import { logger } from './logger'
+
 interface Repository {
   id: number
   name: string
@@ -20,21 +22,23 @@ async function loadRepositories(repositoryNames: string[]) {
 
   for (const r of repositoryNames) {
     const url = `https://api.github.com/repos/clowa/${r}`
-    console.log(`Fetching repository data from: ${url}`)
+    logger.request('GET', url)
 
     const response = await fetch(url, {
       headers: headers,
     })
 
     if (!response.ok) {
+      logger.response(response.status, response.statusText, url)
       throw new Error(`Network response was not ok ${response.statusText}`)
     }
+    logger.response(response.status, response.statusText, url)
 
     try {
       const repo: Repository = await response.json()
       repositories.push(repo)
     } catch (error) {
-      console.error(`Failed to parse repository data for ${r}:`, error)
+      logger.error(`Failed to parse repository data for ${r}`, error)
       continue
     }
   }

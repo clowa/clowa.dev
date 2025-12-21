@@ -1,3 +1,5 @@
+import { logger } from './logger'
+
 // Timeout for http call
 // Quote API can take up to 30 seconds on a double cold start
 const timeout: number = 8000
@@ -26,9 +28,10 @@ try {
   const controller = new AbortController()
   const id = setTimeout(() => controller.abort(), timeout)
   const url = canonicalURL + "/api/quote"
-  console.info(`Fetching quote from: ${url}`)
+  logger.request('GET', url)
   const response = await fetch(url, { signal: controller.signal })
   clearTimeout(id)
+  logger.response(response.status, response.statusText, url)
 
   // Check if the API is available and default to a static quote if not.
   if (response.ok) {
@@ -40,9 +43,11 @@ try {
   }
 } catch (error) {
   if (error instanceof DOMException && error.name === 'AbortError') {
-    console.error(`Request to fetch quote timed out after ${timeout} ms`)
+    logger.warn(`Request timed out`, { timeout })
+  } else if (error instanceof Error) {
+    logger.fetchError(error, canonicalURL + "/api/quote")
   } else {
-    console.error(`Failed to fetch quote from API: ${error}`)
+    logger.error('Failed to fetch quote', error)
   }
 }
 
