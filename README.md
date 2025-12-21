@@ -16,16 +16,23 @@ This is my personal website. It is built using [Astro](https://astro.build/) and
 To run the project locally, make sure you have [Node.js](https://nodejs.org/) and the [Azure Static Web Apps CLI](https://learn.microsoft.com/en-us/azure/static-web-apps/local-development) installed - or simply use the provided DevContainer.
 
 For simpliciy you can use the provided [Taskfile](https://taskfile.dev/) to run common tasks.
-There are two main ways to run the project locally:
 
-### `task run-devserver`
+**`task init-devcontainer`**
+
+- Sets up the project by setting up permissions and installing dependencies
+- Should be run once after starting a new devcontainer or codespaces instance
+
+>[!NOTE]
+> There are two main ways to run the project locally.
+
+**`task run-devserver`**
 
 - Provides **live reloading** of the swa when you save files
 - Uses Astro's development server for fast iteration
 - **Limitation**: API endpoints don't support live-reloading
 - **Best for**: Frontend-only development
 
-### `task run`
+**`task run`**
 
 - Builds a static version of the entire app
 - Spins up both the web app AND function APIs together

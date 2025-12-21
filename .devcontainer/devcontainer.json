@@ -29,10 +29,9 @@
   },
   "containerUser": "codespace",
   "remoteUser": "codespace",
-  "appPort": 4280,
-  "forwardPorts": [4280, 7071],
+  "appPort": [4280],
   "features": {
-    "ghcr.io/devcontainers-contrib/features/go-task:1": {},
+    "ghcr.io/devcontainers-extra/features/go-task:1": {},
     "ghcr.io/dhoeric/features/trivy:1": {},
     "ghcr.io/devcontainers/features/github-cli:1": {}
   },

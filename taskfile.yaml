@@ -11,7 +11,9 @@ tasks:
     cmds:
       - container run --rm -it -v $(pwd):/app -w /app node:24 npx @astrojs/upgrade
 
-  npm-install:
+  # Setup node_modules and install dependencies
+  # This command should be run after starting a new devcontainer or codespaces instance
+  init-devcontainer:
     cmds:
       - |
         cd {{.TASKFILE_DIR}}/api && \
