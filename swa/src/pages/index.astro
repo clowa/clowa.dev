@@ -3,6 +3,7 @@ import Layout from '@layouts/Layout.astro';
 import Footer from '@components/Footer.astro';
 import CardGrid from '@components/CardGrid.astro';
 import IconList from '@components/IconList.astro';
+import QuoteBox from '@components/QuoteBox.astro';
 
 // add font awesome icons
 import { faGithub, faPaypal, faStackOverflow } from '@fortawesome/free-brands-svg-icons';
@@ -57,10 +58,7 @@ const publishedPosts = allPosts
 				}
 			]}
 		/>
-		<div id="quote-loader" class="pulsar"></div>
-		<p id="quote" class="quote animate-bottom" style="display:none;">
-			<a id="quote-text" role="article" aria-label="Quote of the day"></a></br><strong><a id="quote-author" role="article" aria-label="Author of the quote of the day"></a></strong>
-		</p>
+		<QuoteBox />
 		<hr class="divider" />
 		<CardGrid
 				title="My recent Blog Posts"
@@ -93,8 +91,6 @@ const publishedPosts = allPosts
 	</main>
 </Layout>
 <Footer text="Assembled with no clue, Astro magic and Pico.css."/>
-
-<script src="@scripts/loadQuote.ts"></script>
 
 <style>
 	/* General */
@@ -140,66 +136,4 @@ const publishedPosts = allPosts
 		max-width: 416px;
 		height: auto;
   }
-	/* Loading animation */
-  .pulsar {
-    --uib-size: 40px;
-    --uib-color: rgb(var(--accent-light));
-    --uib-speed: 1.75s;
-    position: relative;
-		margin: 1rem;
-		margin-left: auto;
-		margin-right: auto;
-    height: var(--uib-size);
-    width: var(--uib-size);
-  }
-
-  .pulsar::before,
-  .pulsar::after {
-    content: '';
-    position: absolute;
-    top: 0;
-    left: 0;
-    height: 100%;
-    width: 100%;
-    border-radius: 50%;
-    background-color: var(--uib-color);
-    animation: pulse var(--uib-speed) ease-in-out infinite;
-    transform: scale(0);
-    transition: background-color 0.3s ease;
-  }
-
-  .pulsar::after {
-    animation-delay: calc(var(--uib-speed) / -2);
-  }
-
-  @keyframes pulse {
-    0%,
-    100% {
-      transform: scale(0);
-      opacity: 1;
-    }
-    50% {
-      transform: scale(1);
-      opacity: 0.25;
-    }
-  }
-	/* Quote text */
-	.quote {
-		margin-bottom: 2rem;
-		border: 1px solid rgba(var(--accent-light), 25%);
-		background: linear-gradient(rgba(var(--accent-dark), 66%), rgba(var(--accent-dark), 33%));
-		padding: 1.5rem;
-		border-radius: 8px;
-	}
-	.quote code {
-		font-size: 0.8em;
-		font-weight: bold;
-		background: rgba(var(--accent-light), 12%);
-		color: rgb(var(--accent-light));
-		border-radius: 4px;
-		padding: 0.3em 0.4em;
-	}
-	.quote strong {
-		color: rgb(var(--accent-light));
-	}
 </style>
