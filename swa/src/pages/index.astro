@@ -1,5 +1,5 @@
 ---
-import Layout from '@layouts/Layout.astro';
+import BaseLayout from '@layouts/BaseLayout.astro';
 import Footer from '@components/Footer.astro';
 import CardGrid from '@components/CardGrid.astro';
 import IconList from '@components/IconList.astro';
@@ -26,7 +26,7 @@ const publishedPosts = allPosts
 	.sort((a: any, b: any) => new Date(b.frontmatter.pubDate).valueOf() - new Date(a.frontmatter.pubDate).valueOf());
 ---
 
-<Layout title="Cedric Ahlers">
+<BaseLayout title="Cedric Ahlers">
 	<main>
 		<div class="profile-picture">
 			<Image
@@ -89,7 +89,7 @@ const publishedPosts = allPosts
 		}))}
 		/>
 	</main>
-</Layout>
+</BaseLayout>
 <Footer text="Assembled with no clue, Astro magic and Pico.css."/>
 
 <style>
