@@ -26,7 +26,11 @@ const publishedPosts = allPosts
 	.sort((a: any, b: any) => new Date(b.frontmatter.pubDate).valueOf() - new Date(a.frontmatter.pubDate).valueOf());
 ---
 
-<BaseLayout title="Cedric Ahlers">
+<BaseLayout 
+	title="Cedric Ahlers"
+	description="Personal website, portfolio, and blog of Cedric Ahlers (clowa): software projects, tutorials, and social links."
+	keywords="Cedric Ahlers, clowa, portfolio, blog, tutorials, cloud, azure, personal website"
+	>
 	<main>
 		<div class="profile-picture">
 			<Image

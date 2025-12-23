@@ -5,10 +5,11 @@ import "remark-github-blockquote-alert/alert.css";
 // 1. The frontmatter prop gives access to frontmatter and other data
 const { frontmatter } = Astro.props;
 ---
-<BaseLayout title={frontmatter.title}>
-  <meta charset="utf-8" />
-  <meta name="description" content={frontmatter.description} />
-  <meta name="keywords" content={frontmatter.tags.join(", ")} />
+<BaseLayout 
+  title={frontmatter.title}
+  description={frontmatter.description}
+  keywords={frontmatter.tags.join(", ")}
+  >
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
 
   <main class="container">
