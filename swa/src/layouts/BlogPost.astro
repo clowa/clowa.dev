@@ -1,22 +1,17 @@
 ---
+import BaseLayout from '@layouts/BaseLayout.astro';
 import "@styles/base.css";
 import "remark-github-blockquote-alert/alert.css";
 // 1. The frontmatter prop gives access to frontmatter and other data
 const { frontmatter } = Astro.props;
 ---
-<html lang="en">
-  <head>
-    <title>{frontmatter.title}</title>
-		<meta charset="utf-8" />
-    <meta name="description" content={frontmatter.description} />
-		<meta name="keywords" content={frontmatter.tags.join(", ")} />
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="color-scheme" content="light dark">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
-    <meta name="generator" content={Astro.generator} />
-  </head>
-  <body>
-    <main class="container">
+<BaseLayout title={frontmatter.title}>
+  <meta charset="utf-8" />
+  <meta name="description" content={frontmatter.description} />
+  <meta name="keywords" content={frontmatter.tags.join(", ")} />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+
+  <main class="container">
       <header class="blog-header">
         <h1>{frontmatter.title}</h1>
         <div class="meta">
@@ -37,8 +32,7 @@ const { frontmatter } = Astro.props;
         © {new Date().getFullYear()} {frontmatter.author} — All rights reserved.
       </footer>
     </main>
-  </body>
-</html>
+</BaseLayout>
 
 <style>
   main.container {
