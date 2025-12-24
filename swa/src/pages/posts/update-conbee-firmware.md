@@ -58,3 +58,10 @@ Dresden Elektronik provides a tool called [`GCFFlasher`](https://github.com/dres
 > I was thinking about creating a docker image for this tool - let me know if you would find that useful by creating a [feature request](https://github.com/clowa/clowa.dev/issues)!
 
 Once you have `GCFFlasher` installed, you can use it to flash the new firmware. Make sure to follow the instructions provided in the [deCONZ documentation](https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Update-deCONZ-manually)
+
+## Follow-up steps
+
+- [Setting up the ConBee for Thread / Matter in Home-Assistant](https://phoscon.de/en/openthread/doc#application-ot-en)
+- [Setting up ConBee with deCONZ](https://www.home-assistant.io/integrations/deconz/)
+- [Setting up ConBee with Zigbee2MQTT](https://phoscon.de/en/conbee3/install#z2m) + [Configuration](https://www.zigbee2mqtt.io/guide/adapters/deconz.html)
+- [Setting up ConBee with ZHA](https://phoscon.de/en/conbee3/install#z2m)
