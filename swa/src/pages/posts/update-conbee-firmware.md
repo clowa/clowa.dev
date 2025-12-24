@@ -59,6 +59,23 @@ Dresden Elektronik provides a tool called [`GCFFlasher`](https://github.com/dres
 
 Once you have `GCFFlasher` installed, you can use it to flash the new firmware. Make sure to follow the instructions provided in the [deCONZ documentation](https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Update-deCONZ-manually)
 
+## Lessons learned
+
+**Flashing fails with `command reset timeout`**
+
+Error:
+
+```plaintext
+connect \.\COM4, baudrate 115200
+reset command timeout
+```
+
+1. Unplug the ConBee from your computer
+2. Start the flashing command `GCFFlasher ...` and leave it running
+3. Attach the ConBee again
+
+This procedure forces the ConBee to run the firmware reboot which should make the flashing work.
+
 ## Follow-up steps
 
 - [Setting up the ConBee for Thread / Matter in Home-Assistant](https://phoscon.de/en/openthread/doc#application-ot-en)
