@@ -19,8 +19,9 @@ Updating the firmware of your ConBee USB stick is essential to ensure compatibil
 
 Dresden Elektronik publishes different firmware versions for the different Hardware like ConBee II, ConBee III and RaspBee. Additionally, there are different firmware files depending on if you are using Zigbee or Thread / Matter. Make sure to download the correct firmware for your use case.
 
-Firmware files for Zigbee can be found on the [Dresden Elektronik website](https://deconz.dresden-elektronik.de/deconz-firmware)
-Firmware files for Thread / Matter can be found on the [Phoscon website](https://phoscon.de/downloads/openthread/firmware/).
+Firmware files for **Zigbee** can be found on the [Dresden Elektronik website](https://deconz.dresden-elektronik.de/deconz-firmware)
+
+Firmware files for **Thread / Matter** can be found on the [Phoscon website](https://phoscon.de/downloads/openthread/firmware/).
 
 ## Verifing the download
 
@@ -52,8 +53,8 @@ Before you start the firmware update process, it's a good idea to back up your c
 
 ## Flash the new firmware
 
-Dresden Elektronik provides a tool called [`GCFFlasher`](https://github.com/dresden-elektronik/gcfflasher) to flash the new firmware onto your ConBee device. You can download the Windows version at the [Dresden Elektronik website](https://deconz.dresden-elektronik.de/win/) and the Linux version at their [GitHub releases page](https://github.com/dresden-elektronik/gcfflasher/releases).
+Dresden Elektronik provides a tool called [`GCFFlasher`](https://github.com/dresden-elektronik/gcfflasher) to flash the new firmware onto your ConBee device. You have to download the [Windows version](https://deconz.dresden-elektronik.de/win/) and the [Linux version](https://github.com/dresden-elektronik/gcfflasher/releases) from differnt sources, but both are trusted.
 
-I was thinking about creating a docker image for this tool - let me know if you would find that useful by creating a [feature request](https://github.com/clowa/clowa.dev/issues)!
+> I was thinking about creating a docker image for this tool - let me know if you would find that useful by creating a [feature request](https://github.com/clowa/clowa.dev/issues)!
 
 Once you have `GCFFlasher` installed, you can use it to flash the new firmware. Make sure to follow the instructions provided in the [deCONZ documentation](https://github.com/dresden-elektronik/deconz-rest-plugin/wiki/Update-deCONZ-manually)
