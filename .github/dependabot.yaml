@@ -3,7 +3,7 @@ updates:
   - package-ecosystem: "github-actions"
     directory: "/"
     schedule:
-      interval: "monthly" # on the first of every month
+      interval: "quarterly" # on the first of each quarter
       time: "18:00"
       timezone: "Europe/Berlin"
     assignees:
