@@ -8,6 +8,9 @@ interface Props {
 }
 
 const { title, description, keywords } = Astro.props;
+
+const rybbitSiteId = import.meta.env.PUBLIC_RYBBIT_SITE_ID || "";
+
 ---
 
 <!doctype html>
@@ -29,6 +32,13 @@ const { title, description, keywords } = Astro.props;
 		<meta name="msapplication-TileColor" content="#da532c">
 		<meta name="theme-color" content="#ffffff">
 		<meta name="generator" content={Astro.generator} />
+
+		<script
+			is:inline
+			src="https://app.rybbit.io/api/script.js"
+			data-site-id={rybbitSiteId}
+			defer
+		></script>
 	</head>
 	<body>
 		<slot />

@@ -20,6 +20,20 @@ Mostly you will start with a `favicon.svg` file, and use a tool like [RealFavico
 
 To figure out which icons are needed for your specific use case, you can refer to [this comprehensive guide on favicons](https://evilmartians.com/chronicles/how-to-favicon-in-2021-six-files-that-fit-most-needs) and [RealFaviconGenerator - FAQ](https://realfavicongenerator.net/faq).
 
+## Web Analytics
+
+This page is using [Rybbit](https://rybbit.io/) for web analytics. To set it up, you need to sign up for an account at Rybbit and create a new site to get your unique Site ID.
+
+To include your Rybbit Site ID in the Astro project, you should set it as an environment variable `PUBLIC_RYBBIT_SITE_ID` in your deployment platform. For local development, you can create a `.env` file in the `swa/` directory with the following content:
+
+```plaintext
+PUBLIC_RYBBIT_SITE_ID=your_site_id_here
+```
+
+_This variable is rendered into the astro page at buildtime._
+
+You can find more information about using environment variables in Astro in the [Astro documentation](https://docs.astro.build/en/guides/environment-variables/).
+
 ## 🧞 Commands
 
 All commands are run from the `swa` directory, from a terminal:
