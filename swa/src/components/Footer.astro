@@ -8,6 +8,7 @@ const { text } = Astro.props;
 
 <footer>
   <p>{text}</p>
+  <a href="/privacy">Privacy Statement</a>
 </footer>
 
 <style>
@@ -17,4 +18,25 @@ const { text } = Astro.props;
     color: rgb(var(--accent-light));
     font-size: 0.9rem;
   }
+
+  /* Unvisited (unclicked) link */
+  a:link {
+    color: rgb(var(--accent-light));
+    text-decoration: none;
+  }
+
+  /* Visited (opened/clicked) link */
+  a:visited {
+    text-decoration:line-through;
+    color: rgb(var(--accent-light));
+  }
+
+  /* Hover state */
+  a:hover {
+    text-decoration: underline;
+    font-weight: bold;
+  }
+
+  /* Active state (while clicking) */
+  a:active {}
 </style>
