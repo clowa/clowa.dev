@@ -12,8 +12,7 @@ categories: ['legal', 'privacy']
 
 We take your privacy seriously. This policy explains what data we collect, why we collect it, and how we use it.
 
-We reserve the right to change this policy at any given time, of which you will be promptly updated. If you want to
-make sure that you are up to date with the latest changes, we advise you to frequently visit this page.
+We may update this Privacy Policy periodically to reflect changes in our practices or for legal reasons. We will post the updated policy on this page with a revised date. If you want to make sure that you are up-to-date with the latest changes, we advise you to frequently visit this page.
 
 ## Consent
 
@@ -21,13 +20,16 @@ By using our website, you hereby consent to our Privacy Policy and agree to its 
 
 ## What We Collect
 
+We gather only minimal data necessary to operate our website effectively and enhance your experience. We collect this information based on our legitimate interests to improve our services and maintain site functionality.
+We will not sell your personal information to any third parties, but we may be required to share it by law.
+
 ### Website Analytics
 
-We use privacy friendly Rybbit to understand how visitors use our website. This helps us improve the user experience and see which features are most valuable.
+We use the privacy-focused analytics service Rybbit to gain insights into how visitors interact with our website. This allows us to enhance the user experience and identify the most valuable features.
 
 **Data collected:**
 
-- Page views and which pages you visit
+- Pages you have visited
 - Time spent on pages
 - Your approximate location (country/region level)
 - Device type and browser information
@@ -35,29 +37,31 @@ We use privacy friendly Rybbit to understand how visitors use our website. This 
 Rybbit.com does not use cookies. This data is collected through a small tracking script.
 
 **Why:** To understand usage patterns and improve our website.
+**Retention:** Analytics data is retained for 6 months to help us identify trends over time without storing long-term personal data.
 
 ### Backend Monitoring
 
-For certain backend APIs, we use Azure Products to troubleshoot technical issues and understand which features people use.
+For certain backend APIs, we use Azure Services to troubleshoot technical issues and understand which features people use.
 
 **Data collected:**
 
 - API request information (what was requested, when, and how long it took)
-- Error details if something fails
+- Error details in case of failures
 - Performance metrics
 
 **Why:** To keep our services running smoothly and identify problems quickly.
+**Retention:** Monitoring data that may contain client details is retained for 30 days.
 
 ## What We Don't Collect
 
 - **No cookies** — Our website does not use cookies.
-- **No personal identification** — We don't collect your name, email, or personal information unless you explicitly provide it.
+- **No personal identification** — We don't collect your name, email, or personal information unless you explicitly provide it. _We do process your IP address to determine your approximate location — we don't store your IP address._
 - **No tracking across other websites** — Our analytics are limited to this website only. We do not follow you around the web.
 
 ## Links to Other Websites
 
-Our page contains links that lead to other websites. If you click on these links we is not held responsible for your data and privacy protection. Visiting those websites is not governed by this privacy policy agreement. Make
-sure to read the privacy policy documentation of the website you go to from our website.
+Our website contains links that lead to other websites. If you click on these links, we cannot be held responsible for your data and privacy protection. Visiting those websites is not governed by this privacy policy agreement. Make
+sure to read the privacy policy of any website you visit from ours.
 
 ## Third-Party Services
 
@@ -68,12 +72,17 @@ Our data processors:
 
 ## Your Data Rights
 
-You have the right to:
+Under the General Data Protection Regulation (GDPR), you have the rights to:
 
 - Know what data we collect about you
+- Correct any inaccurate data
 - Request access to your data
 - Request deletion of your data (where legally possible)
+- Restrict processing of your data
+- Request your data in a portable format
+- Decline our processing of your data for specific purposes (where applicable)
+- File a complaint with your local data protection authority if you believe we violate your rights
 
-## Restricting the Collection of your Personal Data
+## Contact Us
 
-We will not sell your personal information to any third parties. We might are forced to share it if the law forces us.
+If you have any questions about this Privacy Policy, please contact us at <service.clowa@gmail.com>.
