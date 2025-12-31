@@ -5,9 +5,10 @@ interface Props {
 	title: string;
 	description?: string;
 	keywords?: string;
+	robots?: string[];
 }
 
-const { title, description, keywords } = Astro.props;
+const { title, description, keywords, robots } = Astro.props;
 
 const rybbitSiteId = import.meta.env.PUBLIC_RYBBIT_SITE_ID || "";
 
@@ -32,6 +33,8 @@ const rybbitSiteId = import.meta.env.PUBLIC_RYBBIT_SITE_ID || "";
 		<meta name="msapplication-TileColor" content="#da532c">
 		<meta name="theme-color" content="#ffffff">
 		<meta name="generator" content={Astro.generator} />
+
+		{robots && <meta name="robots" content={robots.join(", ")} />}
 
 		<script
 			is:inline
