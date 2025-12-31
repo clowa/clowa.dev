@@ -20,4 +20,4 @@ Allow: /
 Disallow: /api/
 
 # crawling rule(s) for above bots
-# Sitemap: https://clowa.dev/sitemap-index.xml
+Sitemap: https://clowa.dev/sitemap-index.xml
