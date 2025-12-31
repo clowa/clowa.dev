@@ -1,6 +1,20 @@
 # This robots.txt file provides crawling instructions for web crawlers (user-agents).
 # Rule order: In robots.txt, the most specific rule for a given path takes precedence.
 
+## AI training crawlers
+User-agent: Bytespider
+User-agent: ClaudeBot
+User-agent: Google-Extended
+User-agent: GPTBot
+User-agent: xAI-Grok
+Disallow: /
+
+## Scrapers
+User-agent: CCBot
+User-agent: Scrapy
+Disallow: /
+
+## Default
 User-agent: *
 Allow: /
 Disallow: /api/
