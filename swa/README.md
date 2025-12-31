@@ -34,6 +34,9 @@ _This variable is rendered into the astro page at buildtime._
 
 You can find more information about using environment variables in Astro in the [Astro documentation](https://docs.astro.build/en/guides/environment-variables/).
 
+>[!TIP]
+> To disable Rybbit analytics during local development, you can set the `PUBLIC_RYBBIT_SITE_ID` variable to an empty string in your `.env` file or use one of the options mentioned in the [Rybbit documentation](https://rybbit.com/docs/hiding-own-traffic).
+
 ## 🧞 Commands
 
 All commands are run from the `swa` directory, from a terminal:
