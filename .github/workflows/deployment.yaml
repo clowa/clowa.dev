@@ -29,6 +29,13 @@ jobs:
       #   with:
       #     node-version: 18
 
+      - name: Restore cached
+        id: cache-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: swa/.cache
+          key: swa-assets
+
       - name: Install dependencies
         working-directory: swa/
         run: |
@@ -51,6 +58,12 @@ jobs:
         env: # Put a node version on the following line
           NODE_VERSION: 22
           PUBLIC_RYBBIT_SITE_ID: ${{ secrets.PUBLIC_RYBBIT_SITE_ID }}
+
+      - name: Cache images
+        uses: actions/cache/save@v4
+        with:
+          path: swa/.cache
+          key: ${{ steps.cache-restore.outputs.cache-primary-key }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
