@@ -13,17 +13,16 @@ import profilePicture from '../images/profile-picture.jpg';
 // import custom scripts
 import  loadRepositories  from '@scripts/loadRepositories.ts';
 import loadGistsSinceYear from '@scripts/loadGistsSinceYear.ts';
+import { getCollection } from 'astro:content'
 
 const repos = await loadRepositories(['clowa.dev', 'my-setup', 'docker-terraform', 'docker-powershell-core', 'arduino-plant-watering', 'golang-custom-rpi-exporter']);
 const gists = await loadGistsSinceYear(2025);
 
 // Load blog posts dynamically from the posts directory
-const postFiles = import.meta.glob('./posts/*.md', { eager: true });
-const allPosts = Object.values(postFiles);
-// Filter out draft posts and sort by pubDate (newest first)
-const publishedPosts = allPosts
-	.filter((post: any) => post.frontmatter.draft !== true)
-	.sort((a: any, b: any) => new Date(b.frontmatter.pubDate).valueOf() - new Date(a.frontmatter.pubDate).valueOf());
+const allBlogPosts = (await getCollection('posts', ({ data }) => {
+  	return data.draft !== true;
+	}))
+	.sort((a,b) => new Date(b.data.pubDate).valueOf() - new Date(a.data.pubDate).valueOf());
 ---
 
 <BaseLayout 
@@ -66,12 +65,11 @@ const publishedPosts = allPosts
 		<hr class="divider" />
 		<CardGrid
 				title="My recent Blog Posts"
-				cards={publishedPosts
-					.filter((post: any) => post.url)
-					.map((post: any) => ({
-						title: post.frontmatter.title,
-						body: post.frontmatter.description,
-						href: post.url
+				cards={allBlogPosts
+					.map((post) => ({
+						title: post.data.title,
+						body: post.data.description,
+						href: `/posts/${post.id}`
 					}))}
 		/>
 		<hr class="divider" />
