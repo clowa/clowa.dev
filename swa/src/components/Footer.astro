@@ -1,14 +1,32 @@
 ---
+import { icon } from '@fortawesome/fontawesome-svg-core';
+import { faUserSecret, faLeaf } from '@fortawesome/free-solid-svg-icons';
+
 interface Props {
 	text: string;
 }
 
 const { text } = Astro.props;
+
 ---
 
 <footer>
   <p>{text}</p>
-  <a href="/privacy">Privacy Statement</a>
+  <ul>
+    <li>
+      <a href="/privacy">
+        Privacy Statement
+        <i class='fa-1x' set:html={icon(faUserSecret).html}></i>
+      </a>
+    </li>
+    <li>
+      <a href="https://www.websitecarbon.com/website/clowa-dev/" target="_blank">
+        Carbon Score
+        <i class='fa-1x' set:html={icon(faLeaf).html}></i>
+      </a>
+    </li>
+  </ul>
+  
 </footer>
 
 <style>
@@ -17,6 +35,19 @@ const { text } = Astro.props;
     padding: 1rem;
     color: rgb(var(--accent-light));
     font-size: 0.9rem;
+  }
+
+  footer ul {
+    list-style: none;
+    padding: 0;
+    display: grid;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+  }
+
+  a i {
+    margin-left: 0.25rem;
   }
 
   /* Unvisited (unclicked) link */
@@ -33,7 +64,6 @@ const { text } = Astro.props;
 
   /* Hover state */
   a:hover {
-    text-decoration: underline;
     font-weight: bold;
   }
 
