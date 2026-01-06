@@ -2,24 +2,28 @@
 import BaseLayout from '@layouts/BaseLayout.astro';
 import "@styles/base.css";
 import "remark-github-blockquote-alert/alert.css";
-// 1. The frontmatter prop gives access to frontmatter and other data
-const { frontmatter } = Astro.props;
+import type { CollectionEntry } from 'astro:content';
+// import type of the collection schema
+interface Props {
+  post: CollectionEntry<'posts'>;
+}
+const { post } = Astro.props;
 ---
 <BaseLayout 
-  title={frontmatter.title}
-  description={frontmatter.description}
-  keywords={frontmatter.tags.join(", ")}
+  title={post.data.title}
+  description={post.data.description}
+  keywords={post.data.tags?.join(", ")}
   >
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
 
   <main class="container">
       <header class="blog-header">
-        <h1>{frontmatter.title}</h1>
+        <h1>{post.data.title}</h1>
         <div class="meta">
-          <span>By {frontmatter.author} &middot; {new Date(frontmatter.pubDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
-          {frontmatter.tags && frontmatter.tags.length > 0 && (
+          <span>By {post.data.author} &middot; {new Date(post.data.pubDate).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+          {post.data.tags && post.data.tags.length > 0 && (
             <div class="tags">
-              {frontmatter.tags.map((tag: string) => (
+              {post.data.tags.map((tag: string) => (
                 <span class="tag">{tag}</span>
               ))}
             </div>
@@ -30,7 +34,7 @@ const { frontmatter } = Astro.props;
         <slot /> <!-- Markdown content is injected here -->
       </article>
       <footer class="blog-footer">
-        © {new Date().getFullYear()} {frontmatter.author} — All rights reserved.
+        © {new Date().getFullYear()} {post.data.author} — All rights reserved.
       </footer>
     </main>
 </BaseLayout>
