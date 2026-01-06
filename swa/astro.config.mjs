@@ -12,4 +12,5 @@ export default defineConfig({
   integrations: [sitemap({
     customPages: [],
   })],
+  cacheDir: './.cache'
 });
