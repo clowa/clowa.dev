@@ -1,10 +1,10 @@
 ---
 layout: '@layouts/BlogPost.astro'
 title: 'Signing Emails with S/MIME'
+description: 'A guide on how to sign your emails using S/MIME on macOS and iOS to ensure the authenticity and integrity of your emails.'
+author: Clowa
 draft: false
 pubDate: 2026-01-04
-description: 'A guide on how to sign your emails using S/MIME on macOS and iOS to ensure the authenticity and integrity of your emails.'
-author: 'Clowa'
 tags: ["email", "security", "tutorial", "S/MIME"]
 ---
 

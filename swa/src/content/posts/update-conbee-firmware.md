@@ -1,10 +1,10 @@
 ---
 layout: '@layouts/BlogPost.astro'
 title: 'Update the firmware of your ConBee'
+description: 'A guide on how to update the firmware of your ConBee USB stick for Zigbee connectivity.'
+author: Clowa
 draft: false
 pubDate: 2025-12-23
-description: 'A guide on how to update the firmware of your ConBee USB stick for Zigbee connectivity.'
-author: 'Clowa'
 tags: ["home assistant", "conBee", "zigbee", "matter"]
 ---
 

@@ -1,10 +1,10 @@
 ---
 layout: '@layouts/BlogPost.astro'
 title: 'Accessing Home Assistant via SSH'
+description: 'A guide on how to access the node of your Home Assistant system using SSH.'
+author: Clowa
 draft: false
 pubDate: 2025-12-17
-description: 'A guide on how to access the node of your Home Assistant system using SSH.'
-author: 'Clowa'
 tags: ["home assistant", "SSH", "tutorial"]
 ---
 
