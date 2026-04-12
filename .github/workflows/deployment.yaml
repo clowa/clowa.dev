@@ -38,7 +38,7 @@ jobs:
       # directly to the deploy action via app_location to skip a redundant rebuild.
       - name: Install dependencies (swa)
         working-directory: swa/
-        run: npm install
+        run: npm ci --no-audit --no-fund
 
       - name: Build (swa)
         working-directory: swa/
@@ -51,7 +51,7 @@ jobs:
       # runtime language detection via Oryx.
       - name: Install dependencies (api)
         working-directory: api/
-        run: npm install
+        run: npm ci --no-audit --no-fund
 
       - name: Build (api)
         working-directory: api/
