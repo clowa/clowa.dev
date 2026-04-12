@@ -1,11 +1,13 @@
 name: Azure Static Web Apps CI/CD
 
+# Deploys to production on push to main.
+# On PRs, builds both swa and api to validate changes. Deployment to a staging environment
+# is skipped for Dependabot PRs since they don't have access to deployment secrets.
+# See: https://learn.microsoft.com/en-us/azure/static-web-apps/review-publish-pull-requests
 on:
   push:
     branches:
       - main
-  # Eventually, deploy this to a staging environment
-  # See: https://learn.microsoft.com/en-us/azure/static-web-apps/review-publish-pull-requests
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
@@ -32,16 +34,28 @@ jobs:
       #   with:
       #     node-version: ${ env.NODE_VERSION }
 
-      - name: Install dependencies
+      # Build the Astro frontend. The output is written to swa/dist/ and passed
+      # directly to the deploy action via app_location to skip a redundant rebuild.
+      - name: Install dependencies (swa)
         working-directory: swa/
-        run: |
-          npm install
+        run: npm install
 
-      - name: Build
+      - name: Build (swa)
         working-directory: swa/
         run: npm run build
         env:
           PUBLIC_RYBBIT_SITE_ID: ${{ secrets.PUBLIC_RYBBIT_SITE_ID }}
+
+      # Build the Azure Functions API to validate TypeScript compiles on every PR,
+      # including Dependabot. The deploy action rebuilds the API itself to retain
+      # runtime language detection via Oryx.
+      - name: Install dependencies (api)
+        working-directory: api/
+        run: npm install
+
+      - name: Build (api)
+        working-directory: api/
+        run: npm run build
 
       - name: Deploy
         if: github.actor != 'dependabot[bot]'
@@ -73,4 +87,3 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: "close"
           app_location: "swa" # App source code path
-
