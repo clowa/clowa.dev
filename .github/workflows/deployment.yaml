@@ -34,7 +34,15 @@ jobs:
         run: |
           npm install
 
-      - name: Build And Deploy
+      - name: Build
+        working-directory: swa/
+        run: npm run build
+        env:
+          NODE_VERSION: 22
+          PUBLIC_RYBBIT_SITE_ID: ${{ secrets.PUBLIC_RYBBIT_SITE_ID }}
+
+      - name: Deploy
+        if: github.actor != 'dependabot[bot]'
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
@@ -44,16 +52,15 @@ jobs:
           ###### Repository/Build Configurations - These values can be configured to match you app requirements. ######
           # For more information regarding Static Web App workflow configurations, please visit: https://aka.ms/swaworkflowconfig
           api_location: "api" # Api source code path - optional
-          app_location: "swa" # App source code path
-          output_location: "dist/" # Built app content directory, relative to app_location - optional
+          app_location: "swa/dist" # Pre-built app content directory
           ###### End of Repository/Build Configurations ######
-          app_build_command: "npm run build"
+          skip_app_build: true
         env: # Put a node version on the following line
           NODE_VERSION: 22
           PUBLIC_RYBBIT_SITE_ID: ${{ secrets.PUBLIC_RYBBIT_SITE_ID }}
 
   close_pull_request_job:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
+    if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.actor != 'dependabot[bot]'
     runs-on: ubuntu-latest
     environment: static-web-app
     name: Close Pull Request Job
