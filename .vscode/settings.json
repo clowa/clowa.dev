@@ -1,3 +1,7 @@
 {
-  "debug.internalConsoleOptions": "neverOpen"
+  "debug.internalConsoleOptions": "neverOpen",
+  "cSpell.words": [
+    "RYBBIT",
+    "caddy"
+  ]
 }
