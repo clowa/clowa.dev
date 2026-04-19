@@ -6,8 +6,8 @@ tasks:
     cmds:
       - container run --rm -it -v $(pwd):/app -w /app node:24 npm update
 
-  astor-upgrade:
-    dir: api/
+  astro-upgrade:
+    dir: swa/
     cmds:
       - container run --rm -it -v $(pwd):/app -w /app node:24 npx @astrojs/upgrade
 
@@ -16,46 +16,22 @@ tasks:
   init-devcontainer:
     cmds:
       - |
-        cd {{.TASKFILE_DIR}}/api && \
-        sudo chown codespace:codespace node_modules && \
-        npm install
-      - |
         cd {{.TASKFILE_DIR}}/swa && \
         sudo chown codespace:codespace node_modules && \
         npm install
 
   build:
+    dir: swa/
     cmds:
-      - |
-        swa build 
-        sleep 1
+      - npm ci --no-audit --no-fund
+      - npm run build
     sources:
-      - api/**
       - swa/**
     generates:
-      - api/dist/**
-      - api/node_modules/**
       - swa/dist/**
       - swa/node_modules/**
 
-  run-devserver:
-    deps:
-      - build
+  dev:
+    dir: swa/
     cmds:
-      - |
-        PATH="/opt/homebrew/opt/node@18/bin:$PATH"
-        source .env
-        swa start \
-          --app-location {{.TASKFILE_DIR}}/swa/ \
-          --app-devserver-url http://localhost:4321 \
-          --api-location {{.TASKFILE_DIR}}/api/ \
-          --run 'npm run dev'
-
-  # Spins up the static web app and the function apps
-  # No live reloading !!!
-  run:
-    cmds:
-      - |
-        PATH="/opt/homebrew/opt/node@18/bin:$PATH"
-        source .env
-        swa start
+      - npm run dev

@@ -1,5 +1,5 @@
 {
-  "name": "Azure Static Web Apps & Astro",
+  "name": "Astro",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -11,8 +11,6 @@
         "AquaSecurityOfficial.trivy-vulnerability-scanner",
         "dbaeumer.vscode-eslint",
         "ms-azuretools.vscode-docker",
-        "ms-azuretools.vscode-azurefunctions",
-        "ms-azuretools.vscode-azurestaticwebapps",
         "astro-build.astro-vscode"
       ]
     },
@@ -29,7 +27,7 @@
   },
   "containerUser": "codespace",
   "remoteUser": "codespace",
-  "appPort": [4280],
+  "appPort": [4321],
   "features": {
     "ghcr.io/devcontainers-extra/features/go-task:1": {},
     "ghcr.io/dhoeric/features/trivy:1": {},
@@ -38,7 +36,6 @@
   "mounts": [
     "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,readonly",
     // "source=/run/host-services/ssh-auth.sock,target=/run/host-services/ssh-auth.sock,type=bind",
-    "source=${localWorkspaceFolderBasename}-api-node_modules,target=${containerWorkspaceFolder}/api/node_modules,type=volume",
     "source=${localWorkspaceFolderBasename}-swa-node_modules,target=${containerWorkspaceFolder}/swa/node_modules,type=volume"
   ]
   // "postCreateCommand": "task npm-install"
