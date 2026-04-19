@@ -35,3 +35,7 @@ tasks:
     dir: swa/
     cmds:
       - npm run dev
+
+  docker-build:
+    cmds:
+      - docker buildx build -t clowa/clowa.dev:dev {{.CLI_ARGS}} .
