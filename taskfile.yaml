@@ -37,5 +37,25 @@ tasks:
       - npm run dev
 
   docker-build:
+    vars:
+      SHORT_SHA:
+        sh: git rev-parse --short HEAD
+      REGISTRY: rg.fr-par.scw.cloud/clw-web-prod/clw-web-prod
     cmds:
-      - docker buildx build -t clowa/clowa.dev:dev {{.CLI_ARGS}} .
+      - >
+        docker buildx build
+        --platform linux/amd64
+        --build-arg PUBLIC_RYBBIT_SITE_ID={{.PUBLIC_RYBBIT_SITE_ID}}
+        -t {{.REGISTRY}}:{{.SHORT_SHA}}
+        -t {{.REGISTRY}}:latest
+        --push
+        {{.CLI_ARGS}} .
+
+  deploy:
+    vars:
+      SHORT_SHA:
+        sh: git rev-parse --short HEAD
+      REGISTRY: rg.fr-par.scw.cloud/clw-web-prod/clw-web-prod
+    cmds:
+      - task: docker-build
+      - op run --env-file ./.env.1password -- env REGISTRY_IMAGE={{.REGISTRY}}:{{.SHORT_SHA}} ./node_modules/.bin/serverless deploy

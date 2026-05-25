@@ -1,4 +1,4 @@
-ARG NODE_VERSION=18
+ARG NODE_VERSION=22
 
 FROM node:${NODE_VERSION}-bookworm as final
 
@@ -15,7 +15,14 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
         sudo \
-        lsb-release
+        lsb-release \
+        curl
+
+# Install Scaleway CLI
+RUN curl -fsSL https://raw.githubusercontent.com/scaleway/scaleway-cli/master/scripts/get.sh | bash
+
+# Install Serverless v3 OOS Framework 
+RUN npm i osls -g
 
 # Create a non-root user to use - see: https://code.visualstudio.com/remote/advancedcontainers/add-nonroot-user#_creating-a-nonroot-user
 RUN groupadd --gid $USER_GID $USERNAME \

@@ -1,5 +1,5 @@
 {
-  "name": "Astro",
+  "name": "clowa.dev",
   "customizations": {
     "vscode": {
       "extensions": [
@@ -27,16 +27,21 @@
   },
   "containerUser": "codespace",
   "remoteUser": "codespace",
-  "appPort": [4321],
+  "appPort": [
+    4321
+  ],
   "features": {
     "ghcr.io/devcontainers-extra/features/go-task:1": {},
     "ghcr.io/dhoeric/features/trivy:1": {},
-    "ghcr.io/devcontainers/features/github-cli:1": {}
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {
+      "installDockerBuildx": true
+    }
   },
   "mounts": [
     "source=${localEnv:HOME}/.ssh,target=/root/.ssh,type=bind,readonly",
     // "source=/run/host-services/ssh-auth.sock,target=/run/host-services/ssh-auth.sock,type=bind",
     "source=${localWorkspaceFolderBasename}-swa-node_modules,target=${containerWorkspaceFolder}/swa/node_modules,type=volume"
-  ]
-  // "postCreateCommand": "task npm-install"
+  ],
+  // "postCreateCommand": ""
 }

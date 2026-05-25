@@ -27,3 +27,14 @@ For simplicity you can use the provided [Taskfile](https://taskfile.dev/) to run
 **`task build`**
 
 - Builds the static site to `swa/dist/`
+
+## Lessons Learned
+
+See [LESSONS_LEARNED.md](LESSONS_LEARNED.md).
+
+## Sources
+
+- [Serverless v3 OOS alternative](https://github.com/oss-serverless/serverless)
+- [Scaleway - Serverless Framework Plugin](https://github.com/scaleway/serverless-scaleway-functions)
+- [Scaleway - Serverless Container Custom Domain](https://www.scaleway.com/en/docs/serverless-containers/how-to/add-a-custom-domain-to-a-container/)
+- [Scaleway - Serverless Container Limitations](https://www.scaleway.com/en/docs/serverless-containers/reference-content/containers-limitations/)

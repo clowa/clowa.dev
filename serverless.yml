@@ -1,0 +1,36 @@
+service: clw-web-prod
+
+plugins:
+  - serverless-scaleway-functions
+
+provider:
+  name: scaleway
+
+package:
+  patterns:
+    - "!node_modules/**"
+    - "!.gitignore"
+    - "!.git/**"
+
+custom:
+  containers:
+    clw-web-prod:
+      registryImage: ${env:REGISTRY_IMAGE}
+
+      cpuLimit: 70
+      memoryLimit: 128
+      sandbox: v2
+      port: 80
+
+      minScale: 0
+      maxScale: 3
+      httpOption: redirected
+      privacy: public
+      timeout: 30s
+      healthCheck:
+        type: tcp
+        port: 80
+        interval: 10s
+        failureThreshold: 3
+      custom_domains:
+        - clowa.dev
