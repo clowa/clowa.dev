@@ -1,0 +1,257 @@
+name: Scaleway Registry Cleanup
+description: >-
+  Prune old image tags from a Scaleway Container Registry, keeping the N newest
+  tags plus an explicit list of protected tags that are never deleted.
+
+# NOTE: GitHub composite-action inputs are always strings — there is no `type`
+# field (unlike reusable workflows / workflow_dispatch). All inputs are therefore
+# validated explicitly in the "Validate inputs" step below.
+inputs:
+  secret-key:
+    description: Scaleway API secret key (UUID). Pass via secrets, never hard-code.
+    required: true
+  project-id:
+    description: Scaleway project ID (UUID) that owns the registry namespace.
+    required: true
+  region:
+    description: "Scaleway region of the registry. One of: fr-par, nl-ams, pl-waw."
+    required: false
+    default: fr-par
+  namespace:
+    description: Container Registry namespace name.
+    required: true
+  image:
+    description: Image name within the namespace.
+    required: true
+  keep-last:
+    description: Number of most-recent tags to keep (non-negative integer). Protected tags do not count toward this.
+    required: false
+    default: "10"
+  protected-tags:
+    description: Whitespace/newline-separated tags that are never deleted and never counted toward keep-last.
+    required: false
+    default: latest
+  dry-run:
+    description: "When 'true', report what would be deleted without deleting anything."
+    required: false
+    default: "false"
+
+outputs:
+  kept-count:
+    description: Number of tags retained.
+    value: ${{ steps.cleanup.outputs.kept-count }}
+  deleted-count:
+    description: Number of tags deleted (0 when dry-run is true).
+    value: ${{ steps.cleanup.outputs.deleted-count }}
+  deleted-tags:
+    description: JSON array of the tag names selected for deletion.
+    value: ${{ steps.cleanup.outputs.deleted-tags }}
+
+runs:
+  using: composite
+  steps:
+    - name: Validate inputs
+      id: validate
+      shell: bash
+      # Inputs are passed via env (not interpolated into the script body) to
+      # avoid shell-injection through untrusted input values.
+      env:
+        IN_SECRET_KEY: ${{ inputs.secret-key }}
+        IN_PROJECT_ID: ${{ inputs.project-id }}
+        IN_REGION: ${{ inputs.region }}
+        IN_NAMESPACE: ${{ inputs.namespace }}
+        IN_IMAGE: ${{ inputs.image }}
+        IN_KEEP_LAST: ${{ inputs.keep-last }}
+        IN_PROTECTED_TAGS: ${{ inputs.protected-tags }}
+        IN_DRY_RUN: ${{ inputs.dry-run }}
+      run: |
+        set -euo pipefail
+        errors=()
+
+        uuid_re='^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+        # Scaleway/Docker name charset: lowercase alphanumerics plus . _ - (not leading/trailing separators)
+        name_re='^[a-z0-9]([a-z0-9._-]*[a-z0-9])?$'
+        # Docker tag charset: word char first, then word chars / . / -
+        tag_re='^[A-Za-z0-9_][A-Za-z0-9_.-]*$'
+
+        [[ "${IN_SECRET_KEY}" =~ $uuid_re ]] || errors+=("secret-key must be a Scaleway API secret key in UUID format")
+        [[ "${IN_PROJECT_ID}" =~ $uuid_re ]] || errors+=("project-id must be a UUID")
+
+        case "${IN_REGION}" in
+          fr-par|nl-ams|pl-waw) ;;
+          *) errors+=("region '${IN_REGION}' is not a valid Scaleway registry region (expected: fr-par, nl-ams, pl-waw)") ;;
+        esac
+
+        [[ "${IN_NAMESPACE}" =~ $name_re ]] || errors+=("namespace '${IN_NAMESPACE}' is invalid (lowercase alphanumerics and . _ - only)")
+        [[ "${IN_IMAGE}" =~ $name_re ]] || errors+=("image '${IN_IMAGE}' is invalid (lowercase alphanumerics and . _ - only)")
+
+        [[ "${IN_KEEP_LAST}" =~ ^[0-9]+$ ]] || errors+=("keep-last '${IN_KEEP_LAST}' must be a non-negative integer")
+
+        case "${IN_DRY_RUN}" in
+          true|false) ;;
+          *) errors+=("dry-run '${IN_DRY_RUN}' must be 'true' or 'false'") ;;
+        esac
+
+        # protected-tags: validate each whitespace-separated token (empty list is allowed).
+        read -ra _ptags <<< "${IN_PROTECTED_TAGS:-}"
+        for t in "${_ptags[@]:-}"; do
+          [[ -z "$t" ]] && continue
+          [[ "$t" =~ $tag_re ]] || errors+=("protected-tags entry '$t' is not a valid image tag")
+        done
+
+        if (( ${#errors[@]} > 0 )); then
+          for e in "${errors[@]}"; do echo "::error::Invalid input: ${e}"; done
+          exit 1
+        fi
+        echo "All inputs valid."
+
+    - name: Prune old registry tags
+      id: cleanup
+      shell: bash
+      env:
+        SCW_SECRET_KEY: ${{ inputs.secret-key }}
+        SCW_PROJECT_ID: ${{ inputs.project-id }}
+        SCW_REGION: ${{ inputs.region }}
+        REGISTRY_NAMESPACE: ${{ inputs.namespace }}
+        IMAGE_NAME: ${{ inputs.image }}
+        KEEP_LAST: ${{ inputs.keep-last }}
+        PROTECTED_TAGS: ${{ inputs.protected-tags }}
+        DRY_RUN: ${{ inputs.dry-run }}
+      run: |
+        set -euo pipefail
+        api_root="https://api.scaleway.com/registry/v1/regions/${SCW_REGION}"
+
+        scw_api() {
+          curl --fail-with-body --silent --show-error \
+            -H "X-Auth-Token: ${SCW_SECRET_KEY}" "$@"
+        }
+
+        # Separate the API call from parsing so we can distinguish a failed
+        # request (bad credentials / wrong region / network) from a name that
+        # simply isn't present in the (successful) response.
+        namespaces_resp=$(scw_api -G \
+            --data-urlencode "project_id=${SCW_PROJECT_ID}" \
+            --data-urlencode "name=${REGISTRY_NAMESPACE}" \
+            "${api_root}/namespaces") || {
+          echo "::error::Failed to query registry namespaces in region '${SCW_REGION}'. Check secret-key / project-id and that the key has Container Registry access."
+          echo "${namespaces_resp}" >&2
+          exit 1
+        }
+
+        namespace_id=$(jq -r --arg n "${REGISTRY_NAMESPACE}" \
+          '.namespaces[]? | select(.name == $n) | .id' <<< "${namespaces_resp}" | head -n1)
+
+        if [[ -z "${namespace_id}" || "${namespace_id}" == "null" ]]; then
+          echo "::error::Namespace '${REGISTRY_NAMESPACE}' not found in project '${SCW_PROJECT_ID}' (region '${SCW_REGION}'). Verify the name is spelled correctly and that the API key has Container Registry read permission — a key without access lists zero namespaces."
+          exit 1
+        fi
+        echo "Namespace ${REGISTRY_NAMESPACE} -> ${namespace_id}"
+
+        images_resp=$(scw_api -G \
+            --data-urlencode "namespace_id=${namespace_id}" \
+            --data-urlencode "name=${IMAGE_NAME}" \
+            "${api_root}/images") || {
+          echo "::error::Failed to query images in namespace '${REGISTRY_NAMESPACE}'."
+          echo "${images_resp}" >&2
+          exit 1
+        }
+
+        image_id=$(jq -r --arg n "${IMAGE_NAME}" \
+          '.images[]? | select(.name == $n) | .id' <<< "${images_resp}" | head -n1)
+
+        if [[ -z "${image_id}" || "${image_id}" == "null" ]]; then
+          echo "::error::Image '${IMAGE_NAME}' not found in namespace '${REGISTRY_NAMESPACE}' (region '${SCW_REGION}'). Verify the image name is spelled correctly."
+          exit 1
+        fi
+        echo "Image ${IMAGE_NAME} -> ${image_id}"
+
+        tags='[]'
+        page=1
+        while :; do
+          resp=$(scw_api -G \
+            --data-urlencode "order_by=created_at_desc" \
+            --data-urlencode "page_size=100" \
+            --data-urlencode "page=${page}" \
+            "${api_root}/images/${image_id}/tags") || {
+            echo "::error::Failed to list tags for image '${IMAGE_NAME}' (page ${page})."
+            echo "${resp}" >&2
+            exit 1
+          }
+          page_tags=$(jq '.tags // []' <<< "${resp}")
+          total_count=$(jq '.total_count // 0' <<< "${resp}")
+          tags=$(jq -n --argjson a "${tags}" --argjson b "${page_tags}" '$a + $b')
+          collected=$(jq 'length' <<< "${tags}")
+          (( collected >= total_count )) && break
+          # Guard against a non-advancing loop: if the API returns an empty page
+          # while total_count is still higher, stop instead of looping forever.
+          if (( $(jq 'length' <<< "${page_tags}") == 0 )); then
+            echo "::warning::Tag pagination stopped early: page ${page} empty but total_count=${total_count} (collected=${collected})."
+            break
+          fi
+          page=$((page + 1))
+        done
+
+        # Protected tags are never deleted and never counted toward KEEP_LAST.
+        protected=$(jq -n --arg s "${PROTECTED_TAGS:-}" \
+          '[$s | splits("[[:space:]]+")] | map(select(. != ""))')
+        protected_display=$(jq -r 'if length == 0 then "(none)" else join(", ") end' <<< "${protected}")
+
+        # Partition tags: kept = protected + KEEP_LAST newest unprotected; deleted = the rest.
+        kept=$(jq --argjson keep "${KEEP_LAST}" --argjson protected "${protected}" '
+          (map(select(.name as $n | $protected | index($n)))) +
+          (map(select(.name as $n | $protected | index($n) | not)) | .[:$keep])
+        ' <<< "${tags}")
+
+        deleted=$(jq --argjson keep "${KEEP_LAST}" --argjson protected "${protected}" '
+          map(select(.name as $n | $protected | index($n) | not)) | .[$keep:]
+        ' <<< "${tags}")
+
+        kept_count=$(jq 'length' <<< "${kept}")
+        deleted_count=$(jq 'length' <<< "${deleted}")
+
+        echo "Found $(jq 'length' <<< "${tags}") tag(s); keeping ${kept_count}, deleting ${deleted_count}"
+
+        while IFS=$'\t' read -r tag_id tag_name; do
+          [[ -z "${tag_id}" ]] && continue
+          if [[ "${DRY_RUN}" == "true" ]]; then
+            echo "[dry-run] would delete tag ${tag_name} (${tag_id})"
+            continue
+          fi
+          echo "Deleting tag ${tag_name} (${tag_id})"
+          # force=true is documented as deprecated but still accepted; kept defensively
+          # for the edge case of two SHA tags sharing a digest (e.g. CI re-run on same commit).
+          scw_api -X DELETE "${api_root}/tags/${tag_id}?force=true" > /dev/null
+        done < <(jq -r '.[] | "\(.id)\t\(.name)"' <<< "${deleted}")
+
+        # Expose results as action outputs.
+        {
+          echo "kept-count=${kept_count}"
+          echo "deleted-count=$([[ "${DRY_RUN}" == "true" ]] && echo 0 || echo "${deleted_count}")"
+          echo "deleted-tags=$(jq -c 'map(.name)' <<< "${deleted}")"
+        } >> "${GITHUB_OUTPUT}"
+
+        {
+          echo "## Container Registry Cleanup"
+          echo
+          echo "- **Namespace**: \`${REGISTRY_NAMESPACE}\`"
+          echo "- **Image**: \`${IMAGE_NAME}\`"
+          echo "- **Region**: \`${SCW_REGION}\`"
+          echo "- **Policy**: keep ${KEEP_LAST} newest tag(s); protected: ${protected_display}"
+          [[ "${DRY_RUN}" == "true" ]] && echo "- **Mode**: dry-run (no tags deleted)"
+          echo
+          echo "### Kept (${kept_count})"
+          echo
+          echo "| Tag | Created |"
+          echo "| --- | --- |"
+          jq -r '.[] | "| `\(.name)` | \(.created_at) |"' <<< "${kept}"
+          echo
+          echo "### $([[ "${DRY_RUN}" == "true" ]] && echo "Would delete" || echo "Deleted") (${deleted_count})"
+          echo
+          if (( deleted_count == 0 )); then
+            echo "_No tags deleted._"
+          else
+            echo "| Tag | Created |"
+            echo "| --- | --- |"
+            jq -r '.[] | "| `\(.name)` | \(.created_at) |"' <<< "${deleted}"
+          fi
+        } >> "${GITHUB_STEP_SUMMARY}"

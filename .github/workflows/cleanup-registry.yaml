@@ -1,0 +1,39 @@
+name: Cleanup Registry
+
+on:
+  schedule:
+    # Every Sunday at 03:00 UTC
+    - cron: '0 3 * * 0'
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        description: Report what would be deleted without deleting anything
+        type: boolean
+        default: false
+
+jobs:
+  cleanup:
+    name: Prune Old Registry Images
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Prune old registry images
+        uses: ./.github/actions/scaleway-registry-cleanup
+        with:
+          secret-key: ${{ secrets.SCW_SECRET_KEY }}
+          project-id: ${{ secrets.SCW_PROJECT_ID }}
+          # ── Retention policy (central config) ──────────────────────
+          region: fr-par
+          namespace: clw-web-prod
+          image: clw-web-prod
+          # Number of most-recent tags to keep; protected tags don't count.
+          keep-last: '10'
+          # Tags never deleted (whitespace/newline-separated).
+          protected-tags: latest
+          # Manual runs can opt into dry-run; scheduled runs delete for real.
+          dry-run: ${{ github.event.inputs.dry-run || 'false' }}
