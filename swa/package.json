@@ -15,7 +15,7 @@
     "@fortawesome/fontawesome-svg-core": "^6.5.1",
     "@fortawesome/free-brands-svg-icons": "^6.5.1",
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
-    "astro": "^5.18.1",
+    "astro": "^6.1.10",
     "remark-github-blockquote-alert": "^2.0.1",
     "typescript": "^5.3.3"
   },
