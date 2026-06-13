@@ -79,6 +79,9 @@ jobs:
     runs-on: ubuntu-latest
     environment: static-web-app
     name: Close Pull Request Job
+    permissions:
+      contents: read
+      pull-requests: read
     steps:
       - name: Close Pull Request
         id: closepullrequest
