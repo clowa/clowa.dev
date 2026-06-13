@@ -54,6 +54,9 @@ jobs:
     name: Deploy to Scaleway
     runs-on: ubuntu-latest
     needs: build
+    environment:
+      name: production
+      url: https://clowa.dev
     permissions:
       contents: read
 

@@ -15,6 +15,7 @@ jobs:
   cleanup:
     name: Prune Old Registry Images
     runs-on: ubuntu-latest
+    environment: registry-cleanup
     permissions:
       contents: read
 
