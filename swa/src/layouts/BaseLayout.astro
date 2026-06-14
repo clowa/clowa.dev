@@ -12,6 +12,13 @@ const { title, description, keywords, robots } = Astro.props;
 
 const rybbitSiteId = import.meta.env.PUBLIC_RYBBIT_SITE_ID || "";
 
+// Canonical URLs:
+// - In production, canonicalize to the configured `site` origin (see `swa/astro.config.mjs`).
+// - In local dev, canonicalize to the current dev server origin (localhost + port).
+const productionOrigin = Astro.site ? new URL(Astro.site).origin : Astro.url.origin;
+const canonicalOrigin = import.meta.env.DEV ? Astro.url.origin : productionOrigin;
+const canonicalUrl = new URL(Astro.url.pathname, canonicalOrigin).toString();
+
 ---
 
 <!doctype html>
@@ -29,7 +36,7 @@ const rybbitSiteId = import.meta.env.PUBLIC_RYBBIT_SITE_ID || "";
 		<meta name="apple-mobile-web-app-title" content="clowa" />
 		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
 		<link rel="manifest" href="/site.webmanifest">
-		<link rel="canonical" href={Astro.site}> 
+		<link rel="canonical" href={canonicalUrl} />
 		<meta name="msapplication-TileColor" content="#da532c">
 		<meta name="theme-color" content="#ffffff">
 		<meta name="generator" content={Astro.generator} />

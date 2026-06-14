@@ -10,16 +10,16 @@
     "astro": "astro"
   },
   "dependencies": {
-    "@astrojs/check": "^0.9.6",
-    "@astrojs/sitemap": "^3.6.0",
+    "@astrojs/check": "^0.9.9",
+    "@astrojs/sitemap": "^3.7.3",
     "@fortawesome/fontawesome-svg-core": "^6.5.1",
     "@fortawesome/free-brands-svg-icons": "^6.5.1",
     "@fortawesome/free-solid-svg-icons": "^6.5.1",
-    "astro": "^5.16.2",
+    "astro": "^6.4.6",
     "remark-github-blockquote-alert": "^2.0.1",
     "typescript": "^5.3.3"
   },
   "devDependencies": {
-    "@astrojs/ts-plugin": "^1.10.6"
+    "@astrojs/ts-plugin": "^1.10.9"
   }
 }
