@@ -40,6 +40,13 @@ jobs:
         working-directory: swa/
         run: npm ci --no-audit --no-fund
 
+      - name: Restore cached assets
+        id: cache-assets
+        uses: actions/cache/restore@v4
+        with:
+          path: swa/.cache
+          key: swa-assets
+        
       - name: Build (swa)
         working-directory: swa/
         run: npm run build
@@ -73,6 +80,12 @@ jobs:
           skip_app_build: true
         env:
           PUBLIC_RYBBIT_SITE_ID: ${{ secrets.PUBLIC_RYBBIT_SITE_ID }}
+
+      - name: Cache assets
+        uses: actions/cache/save@v4
+        with:
+          path: swa/.cache
+          key: ${{ steps.cache-assets.outputs.cache-primary-key }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed' && github.actor != 'dependabot[bot]'
