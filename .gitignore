@@ -3,6 +3,11 @@
 
 # files with potential sensitive information
 **/.env
+**/.env*
 
 # go-task caching
 .task/
+
+# serverless framework
+.serverless/
+node_modules/
