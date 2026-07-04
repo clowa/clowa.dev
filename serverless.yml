@@ -32,5 +32,5 @@ custom:
         port: 80
         interval: 10s
         failureThreshold: 3
-      # custom_domains:
-      #   - clowa.dev
+      custom_domains:
+        - clowa.dev
