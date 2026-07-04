@@ -31,7 +31,9 @@ RUN find /app/dist -type f \( \
     \) | xargs -P4 -I{} sh -c 'brotli --best --keep "$1" && gzip -9 -k "$1"' _ {}
 
 # Stage 2: Serve static assets via Caddy
-FROM caddy:2.11.2-alpine
+# 2.11.3+ is required for native OTLP metrics push (`metrics { otlp }`, PR #7664);
+# tracing has been available since 2.5. Both are configured via OTEL_* env vars at runtime.
+FROM caddy:2.11.4-alpine
 
 COPY Caddyfile /etc/caddy/Caddyfile
 COPY --from=builder /app/dist /srv

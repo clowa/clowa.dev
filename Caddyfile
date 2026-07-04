@@ -1,4 +1,18 @@
+{
+	# Push Caddy's runtime metrics (request counts, latencies, status codes, Go
+	# runtime, etc.) to Grafana Cloud via OTLP. Endpoint, protocol, and auth come
+	# from the standard OTEL_EXPORTER_OTLP_* env vars (see serverless.yml).
+	# Requires Caddy >= 2.11.3 for the `otlp` sub-option.
+	metrics {
+		otlp
+	}
+}
+
 :80 {
+	tracing {
+		span {http.request.method}
+	}
+
 	root * /srv
 
 	# Astro writes all bundled assets (JS, CSS, fonts, images) into _astro/ with
