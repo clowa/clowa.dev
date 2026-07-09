@@ -1,6 +1,5 @@
-ARG NODE_VERSION=18
+ARG NODE_VERSION=22
 
-# FROM swacli/static-web-apps-cli:1.1.7
 FROM node:${NODE_VERSION}-bookworm as final
 
 ARG TARGETARCH
@@ -16,14 +15,14 @@ RUN --mount=target=/var/lib/apt/lists,type=cache,sharing=locked \
     && apt-get upgrade -y \
     && apt-get install -y --no-install-recommends \
         sudo \
-        lsb-release
+        lsb-release \
+        curl
 
-# Install Azure Static web app CLI
-RUN npm install -g @azure/static-web-apps-cli
+# Install Scaleway CLI
+RUN curl -fsSL https://raw.githubusercontent.com/scaleway/scaleway-cli/master/scripts/get.sh | bash
 
-# Install azure function core tools
-# This requires version 4.3.0 or higher - see: https://github.com/Azure/azure-functions-core-tools/issues/4279
-RUN npm install -g azure-functions-core-tools@4
+# Install Serverless v3 OOS Framework 
+RUN npm i osls -g
 
 # Create a non-root user to use - see: https://code.visualstudio.com/remote/advancedcontainers/add-nonroot-user#_creating-a-nonroot-user
 RUN groupadd --gid $USER_GID $USERNAME \

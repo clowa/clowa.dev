@@ -6,8 +6,8 @@ tasks:
     cmds:
       - container run --rm -it -v $(pwd):/app -w /app node:24 npm update
 
-  astor-upgrade:
-    dir: api/
+  astro-upgrade:
+    dir: swa/
     cmds:
       - container run --rm -it -v $(pwd):/app -w /app node:24 npx @astrojs/upgrade
 
@@ -16,46 +16,46 @@ tasks:
   init-devcontainer:
     cmds:
       - |
-        cd {{.TASKFILE_DIR}}/api && \
-        sudo chown codespace:codespace node_modules && \
-        npm install
-      - |
         cd {{.TASKFILE_DIR}}/swa && \
         sudo chown codespace:codespace node_modules && \
         npm install
 
   build:
+    dir: swa/
     cmds:
-      - |
-        swa build 
-        sleep 1
+      - npm ci --no-audit --no-fund
+      - npm run build
     sources:
-      - api/**
       - swa/**
     generates:
-      - api/dist/**
-      - api/node_modules/**
       - swa/dist/**
       - swa/node_modules/**
 
-  run-devserver:
-    deps:
-      - build
+  dev:
+    dir: swa/
     cmds:
-      - |
-        PATH="/opt/homebrew/opt/node@18/bin:$PATH"
-        source .env
-        swa start \
-          --app-location {{.TASKFILE_DIR}}/swa/ \
-          --app-devserver-url http://localhost:4321 \
-          --api-location {{.TASKFILE_DIR}}/api/ \
-          --run 'npm run dev'
+      - npm run dev
 
-  # Spins up the static web app and the function apps
-  # No live reloading !!!
-  run:
+  docker-build:
+    vars:
+      SHORT_SHA:
+        sh: git rev-parse --short HEAD
+      REGISTRY: rg.fr-par.scw.cloud/clw-web-prod/clw-web-prod
     cmds:
-      - |
-        PATH="/opt/homebrew/opt/node@18/bin:$PATH"
-        source .env
-        swa start
+      - >
+        docker buildx build
+        --platform linux/amd64
+        --build-arg PUBLIC_RYBBIT_SITE_ID={{.PUBLIC_RYBBIT_SITE_ID}}
+        -t {{.REGISTRY}}:{{.SHORT_SHA}}
+        -t {{.REGISTRY}}:latest
+        --push
+        {{.CLI_ARGS}} .
+
+  deploy:
+    vars:
+      SHORT_SHA:
+        sh: git rev-parse --short HEAD
+      REGISTRY: rg.fr-par.scw.cloud/clw-web-prod/clw-web-prod
+    cmds:
+      - task: docker-build
+      - op run --env-file ./.env.1password -- env REGISTRY_IMAGE={{.REGISTRY}}:{{.SHORT_SHA}} ./node_modules/.bin/serverless deploy

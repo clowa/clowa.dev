@@ -39,19 +39,6 @@ Rybbit.com does not use cookies. This data is collected through a small tracking
 **Why:** To understand usage patterns and improve our website.
 **Retention:** Analytics data is retained for 6 months to help us identify trends over time without storing long-term personal data.
 
-### Backend Monitoring
-
-For certain backend APIs, we use Azure Services to troubleshoot technical issues and understand which features people use.
-
-**Data collected:**
-
-- API request information (what was requested, when, and how long it took)
-- Error details in case of failures
-- Performance metrics
-
-**Why:** To keep our services running smoothly and identify problems quickly.
-**Retention:** Monitoring data that may contain client details is retained for 30 days.
-
 ## What We Don't Collect
 
 - **No cookies** — Our website does not use cookies.
@@ -68,7 +55,7 @@ sure to read the privacy policy of any website you visit from ours.
 Our data processors:
 
 - **Rybbit.com** — Web analytics. See their [privacy policy](https://rybbit.com/privacy).
-- **Microsoft Azure** — Hosting and application monitoring. See their [privacy statement](https://privacy.microsoft.com/en-us/privacystatement) and [understand privacy at Azure](https://azure.microsoft.com/en-us/explore/trusted-cloud/privacy/).
+- **Scaleway SAS** — Hosting (France). See their [privacy policy](https://www.scaleway.com/en/privacy-policy/).
 
 ## Your Data Rights
 

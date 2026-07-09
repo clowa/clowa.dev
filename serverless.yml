@@ -1,0 +1,52 @@
+service: clw-web-prod
+
+plugins:
+  - serverless-scaleway-functions
+
+provider:
+  name: scaleway
+
+package:
+  patterns:
+    - "!node_modules/**"
+    - "!.gitignore"
+    - "!.git/**"
+
+custom:
+  containers:
+    clw-web-prod:
+      registryImage: ${env:REGISTRY_IMAGE}
+
+      # OpenTelemetry: Caddy exports traces + metrics directly to Grafana Cloud
+      # (agentless, no collector). Non-secret config lives here; the auth header
+      # is injected as a Scaleway secret (below) at deploy time.
+      env:
+        OTEL_SERVICE_NAME: web
+        OTEL_EXPORTER_OTLP_ENDPOINT: https://otlp-gateway-prod-eu-west-2.grafana.net/otlp
+        OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+        OTEL_RESOURCE_ATTRIBUTES: service.namespace=clowa,deployment.environment.name=production
+        OTEL_TRACES_SAMPLER: parentbased_traceidratio
+        OTEL_TRACES_SAMPLER_ARG: "0.1" # sample 10% of traces to control cost
+      # Scaleway "extra-secure" env var: the Grafana Cloud Basic-auth header. Never
+      # committed — resolved from the deploy environment (CI secret / 1Password).
+      # Value format: "Authorization=Basic <base64(instanceID:apiKey)>".
+      secret:
+        OTEL_EXPORTER_OTLP_HEADERS: ${env:OTEL_EXPORTER_OTLP_HEADERS}
+
+      cpuLimit: 70
+      memoryLimit: 128
+      sandbox: v2
+      port: 80
+
+      minScale: 0
+      maxScale: 3
+      httpOption: redirected
+      privacy: public
+      timeout: 30s
+      healthCheck:
+        type: tcp
+        port: 80
+        interval: 10s
+        failureThreshold: 3
+      custom_domains:
+        - clowa.dev
