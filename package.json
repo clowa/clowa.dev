@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "devDependencies": {
-    "osls": "^3.63.2",
+    "osls": "^3.76.1",
     "serverless-scaleway-functions": "^0.5.1"
   }
 }
