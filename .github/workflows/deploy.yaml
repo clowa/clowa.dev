@@ -2,7 +2,7 @@ name: Deploy
 
 on:
   push:
-    branches: [refactor/scaleway-container] # TODO: Scope to main
+    branches: [main]
 
 env:
   REGISTRY: rg.fr-par.scw.cloud
