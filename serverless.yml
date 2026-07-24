@@ -54,5 +54,6 @@ custom:
         # must be DNS-verified and pointed at Scaleway before it can be attached
         # here, so they ship commented out — uncomment once DNS is in place.
         # - www.clowa.dev
+        # - clowa.de
         # - me.clowa.de
         # - qunis.day
