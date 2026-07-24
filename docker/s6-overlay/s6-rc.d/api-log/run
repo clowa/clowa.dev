@@ -1,0 +1,5 @@
+#!/command/with-contenv sh
+# Dedicated log sink for the future api. Mirrors caddy-log: writes to
+# /var/log/api/current, rotates at ~1 MiB, keeps 20 archives, runs as `nobody`.
+# Starts only when the api-pipeline is enabled (see api/run).
+exec s6-setuidgid nobody s6-log -b n20 s1000000 /var/log/api

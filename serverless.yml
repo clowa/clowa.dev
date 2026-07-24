@@ -50,3 +50,9 @@ custom:
         failureThreshold: 3
       custom_domains:
         - clowa.dev
+        # Redirect source hosts handled by Caddy (docker/caddy/redirects/). Each
+        # must be DNS-verified and pointed at Scaleway before it can be attached
+        # here, so they ship commented out — uncomment once DNS is in place.
+        # - www.clowa.dev
+        # - me.clowa.de
+        # - qunis.day

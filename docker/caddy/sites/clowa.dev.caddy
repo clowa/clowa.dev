@@ -1,19 +1,16 @@
-{
-	# Push Caddy's runtime metrics (request counts, latencies, status codes, Go
-	# runtime, etc.) to Grafana Cloud via OTLP. Endpoint, protocol, and auth come
-	# from the standard OTEL_EXPORTER_OTLP_* env vars (see serverless.yml).
-	# Requires Caddy >= 2.11.3 for the `otlp` sub-option.
-	metrics {
-		otlp
-	}
-}
-
+# clowa.dev — the Astro static site.
+#
+# Bound to :80 (no host filter) so it is the DEFAULT handler: it answers
+# clowa.dev, the raw Scaleway-generated URL, the TCP health check and local
+# `curl localhost` alike. The redirect hosts under redirects/ use explicit
+# `http://<host>` addresses, which are more specific and therefore win over
+# this catch-all for their host.
 :80 {
 	tracing {
 		span {http.request.method}
 	}
 
-	root * /srv
+	root * /srv/clowa.dev
 
 	# Astro writes all bundled assets (JS, CSS, fonts, images) into _astro/ with
 	# content-hashed filenames. These never change for a given content hash, so
@@ -31,6 +28,12 @@
 	# Sitemaps, manifests, robots.txt: content changes infrequently, short TTL.
 	@metadata path *.xml *.txt *.webmanifest
 	header @metadata Cache-Control "public, max-age=3600"
+
+	# --- Path redirects (examples, disabled) ---------------------------------
+	# Same-host path redirects belong with the site they redirect within. Add
+	# `redir` rules here and they take effect before file_server. Example:
+	#   redir /about-us /about permanent      # 301 /about-us -> /about
+	#   redir /pages/* /blog{uri} permanent		# 301 keep the sub-path
 
 	# Serve pre-compressed sidecar files (.br, .gz) generated at build time.
 	# Removes all runtime CPU cost for compression. Falls back to the uncompressed

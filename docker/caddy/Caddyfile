@@ -1,0 +1,27 @@
+{
+	# TLS is terminated upstream (Scaleway edge; `httpOption: redirected` also does
+	# the http->https redirect there). Caddy only ever speaks plain HTTP on :80, so
+	# automatic HTTPS/ACME must stay off — otherwise Caddy would try to provision
+	# certs for every host below and fail behind the proxy.
+	auto_https off
+
+	# Push Caddy's runtime metrics (request counts, latencies, status codes, Go
+	# runtime, etc.) to Grafana Cloud via OTLP. Endpoint, protocol, and auth come
+	# from the standard OTEL_EXPORTER_OTLP_* env vars (see serverless.yml). When
+	# those are unset (local runs) Caddy still serves normally; only the periodic
+	# metric export fails in the background. Requires Caddy >= 2.11.3 for `otlp`.
+	metrics {
+		otlp
+	}
+}
+
+# --- Hosted content ----------------------------------------------------------
+# One file per served site. These configs only serve content; keep redirect
+# logic out of here so the two concerns stay cleanly separated on disk.
+import /etc/caddy/sites/*.caddy
+
+# --- Redirects ---------------------------------------------------------------
+# One file per redirect source host (domain->domain 301s, path redirects, ...).
+# Kept separate from sites/ so redirect rules never get tangled up with the
+# static-site configuration.
+import /etc/caddy/redirects/*.caddy

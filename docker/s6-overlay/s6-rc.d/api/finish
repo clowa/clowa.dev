@@ -1,0 +1,14 @@
+#!/command/with-contenv sh
+# The api is a CRITICAL service (same policy as Caddy): if it dies, take the
+# whole container down so the orchestrator reschedules it. See caddy/finish for
+# the rationale and argument semantics.
+#
+#   $1 = exit code, or 256 if terminated by a signal
+#   $2 = signal number (only meaningful when $1 == 256)
+if [ "$1" -eq 256 ]; then
+	echo $((128 + $2)) >/run/s6-linux-init-container-results/exitcode
+else
+	echo "$1" >/run/s6-linux-init-container-results/exitcode
+fi
+
+exec /run/s6/basedir/bin/halt
