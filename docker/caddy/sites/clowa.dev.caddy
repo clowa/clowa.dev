@@ -10,36 +10,50 @@
 		span {http.request.method}
 	}
 
-	root * /srv/clowa.dev
+	# --- JSON API ------------------------------------------------------------
+	# The Go api (s6-overlay-supervised, loopback-only) owns the whole /api/*
+	# path namespace and currently serves GET /api/quote. reverse_proxy forwards
+	# the request path unchanged, so the api receives /api/quote as-is. This
+	# `handle` is mutually exclusive with the static `handle` below, so API
+	# requests never fall through to the file_server.
+	handle /api/* {
+		reverse_proxy 127.0.0.1:8080
+	}
 
-	# Astro writes all bundled assets (JS, CSS, fonts, images) into _astro/ with
-	# content-hashed filenames. These never change for a given content hash, so
-	# they are safe to cache indefinitely in the browser.
-	@hashed_assets path /_astro/*
-	header @hashed_assets Cache-Control "public, max-age=31536000, immutable"
+	# --- Static site ---------------------------------------------------------
+	# Everything that is not /api/* is the Astro static site.
+	handle {
+		root * /srv/clowa.dev
 
-	# HTML pages must always be revalidated so visitors see the latest content.
-	# Caddy's automatic ETags turn revalidation into a lightweight 304 response
-	# (headers only, no body) when the page has not changed — important for
-	# reducing the impact of cold starts on returning visitors.
-	@html path *.html /
-	header @html Cache-Control "no-cache"
+		# Astro writes all bundled assets (JS, CSS, fonts, images) into _astro/
+		# with content-hashed filenames. These never change for a given content
+		# hash, so they are safe to cache indefinitely in the browser.
+		@hashed_assets path /_astro/*
+		header @hashed_assets Cache-Control "public, max-age=31536000, immutable"
 
-	# Sitemaps, manifests, robots.txt: content changes infrequently, short TTL.
-	@metadata path *.xml *.txt *.webmanifest
-	header @metadata Cache-Control "public, max-age=3600"
+		# HTML pages must always be revalidated so visitors see the latest
+		# content. Caddy's automatic ETags turn revalidation into a lightweight
+		# 304 response (headers only, no body) when the page has not changed —
+		# important for reducing the impact of cold starts on returning visitors.
+		@html path *.html /
+		header @html Cache-Control "no-cache"
 
-	# --- Path redirects (examples, disabled) ---------------------------------
-	# Same-host path redirects belong with the site they redirect within. Add
-	# `redir` rules here and they take effect before file_server. Example:
-	#   redir /about-us /about permanent      # 301 /about-us -> /about
-	#   redir /pages/* /blog{uri} permanent		# 301 keep the sub-path
+		# Sitemaps, manifests, robots.txt: content changes infrequently, short TTL.
+		@metadata path *.xml *.txt *.webmanifest
+		header @metadata Cache-Control "public, max-age=3600"
 
-	# Serve pre-compressed sidecar files (.br, .gz) generated at build time.
-	# Removes all runtime CPU cost for compression. Falls back to the uncompressed
-	# original for clients that do not advertise a supported encoding.
-	file_server {
-		precompressed br zstd gzip
+		# --- Path redirects (examples, disabled) -----------------------------
+		# Same-host path redirects belong with the site they redirect within.
+		# Add `redir` rules here and they take effect before file_server:
+		#   redir /about-us /about permanent      # 301 /about-us -> /about
+		#   redir /pages/* /blog{uri} permanent   # 301 keep the sub-path
+
+		# Serve pre-compressed sidecar files (.br, .gz) generated at build time.
+		# Removes all runtime CPU cost for compression. Falls back to the
+		# uncompressed original for clients that do not advertise an encoding.
+		file_server {
+			precompressed br zstd gzip
+		}
 	}
 
 	handle_errors {
