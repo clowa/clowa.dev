@@ -30,6 +30,23 @@ For simplicity you can use the provided [Taskfile](https://taskfile.dev/) to run
 
 - Builds the static site to `swa/dist/`
 
+## Architecture
+
+The project ships as a single container image made up of **two technical components** that together deliver **three logical components**.
+
+**Logical components** — what the site is made of:
+
+| # | Component | What it is | Lives in |
+| - | --------- | ---------- | -------- |
+| 1 | Static website | The [Astro](https://astro.build/) site (pages, assets), pre-built to static files | [`swa/`](swa/) |
+| 2 | REST API | A [Gin](https://gin-gonic.com/) + Go service serving dynamic content (`GET /api/quote`) | [`api/`](api/) |
+| 3 | Redirects | Domain → domain 301 rules (one file per source host) | [`docker/caddy/redirects/`](docker/caddy/redirects/) |
+
+**Technical components** — the processes that run inside the container:
+
+- **[Caddy](https://caddyserver.com/)** — the web server. Serves the static files, reverse-proxies the API, and performs the redirects. It runs as the container's primary process.
+- **Go REST API** — a single static binary that serves the dynamic content. It is served through caddy.
+
 ## Lessons Learned
 
 See [LESSONS_LEARNED.md](LESSONS_LEARNED.md).
