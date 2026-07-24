@@ -67,12 +67,13 @@ RUN --mount=type=bind,source=api,target=/src \
     go build -trimpath -ldflags="-s -w" -o /out/api .
 
 # ==============================================================================
-# Stage 3: Runtime — s6-overlay supervising Caddy (and, later, the api)
+# Stage 3: Runtime — Caddy (the CMD) + the s6-overlay-supervised api
 #
-# Multiple processes now share one container, so the container runtime can no
-# longer restart a dead process for us. s6-overlay takes that role: it
-# supervises each service, restarts supporting ones, and (via per-service finish
-# scripts) tears the whole container down when a CRITICAL service dies.
+# Several processes share one container, so the container runtime cannot restart
+# a dead process for us. Caddy runs as the CMD (its exit stops the container);
+# s6-overlay supervises the api (and future supporting services), restarting
+# supporting ones and — via per-service finish scripts — halting the whole
+# container when a CRITICAL supervised service dies.
 #
 # 2.11.3+ is required for native OTLP metrics push (`metrics { otlp }`, PR #7664);
 # tracing has been available since 2.5. Both are configured via OTEL_* env vars.
@@ -129,8 +130,8 @@ ENV GIN_MODE=release
 # Kept in separate directories so the two concerns never bleed into each other.
 COPY docker/caddy/ /etc/caddy/
 
-# Astro static site, served from a per-site sub-directory so more sites (or the
-# api's assets) can live side-by-side under /srv later.
+# Astro static site, served from a per-site sub-directory so additional sites can
+# live side-by-side under /srv.
 COPY --from=builder /app/dist /srv/clowa.dev
 
 # The Go api binary, supervised by s6-overlay and reverse-proxied by Caddy on

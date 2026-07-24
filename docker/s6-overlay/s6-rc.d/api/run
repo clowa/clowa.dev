@@ -3,7 +3,7 @@
 # Listens on loopback only; Caddy reverse_proxies /api/* to 127.0.0.1:8080.
 exec 2>&1
 
-# --- Resource limits (disabled) — see caddy/run for details ------------------
+# --- Resource limits (disabled) — see docker/README.md -----------------------
 # exec s6-softlimit -m 268435456 \
 #   /usr/local/bin/api
 

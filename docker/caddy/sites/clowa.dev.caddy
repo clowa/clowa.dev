@@ -3,8 +3,8 @@
 # Bound to :80 (no host filter) so it is the DEFAULT handler: it answers
 # clowa.dev, the raw Scaleway-generated URL, the TCP health check and local
 # `curl localhost` alike. The redirect hosts under redirects/ use explicit
-# `http://<host>` addresses, which are more specific and therefore win over
-# this catch-all for their host.
+# `<host>:80` addresses, which are more specific and therefore win over this
+# catch-all for their host.
 :80 {
 	tracing {
 		span {http.request.method}

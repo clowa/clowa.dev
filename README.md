@@ -5,6 +5,7 @@ This is my personal website project. It is built using [Astro](https://astro.bui
 ## Repository Structure
 
 - `swa/` — Frontend code of the website (Astro)
+- `api/` — Go backend service (serves `/api/*`, e.g. `GET /api/quote`)
 - `docker/` - Configuration of the monolithic docker container
 
 ## Getting Started
