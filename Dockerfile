@@ -35,7 +35,39 @@ RUN find /app/dist -type f \( \
     \) | xargs -P4 -I{} sh -c 'brotli --best --keep "$1" && gzip -9 -k "$1"' _ {}
 
 # ==============================================================================
-# Stage 2: Runtime — s6-overlay supervising Caddy (and, later, the api)
+# Stage 2: Build the Go API binary
+#
+# Runs on $BUILDPLATFORM (the host arch) and cross-compiles to $TARGETARCH via
+# Go's native GOOS/GOARCH, so an arm64 laptop still emits the amd64 binary
+# Scaleway needs — no QEMU. CGO is disabled so the result is a static binary
+# that runs on the musl-based caddy:alpine runtime with no libc dependency.
+# ==============================================================================
+FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS api-builder
+
+WORKDIR /src
+
+# Download modules first, keyed only on go.mod/go.sum, so the (cached) module
+# download is reused whenever only Go source — not dependencies — changes.
+RUN --mount=type=bind,source=api/go.mod,target=go.mod \
+    --mount=type=bind,source=api/go.sum,target=go.sum \
+    --mount=type=cache,target=/go/pkg/mod \
+    go mod download
+
+# TARGETOS/TARGETARCH are provided by BuildKit; they drive cross-compilation.
+ARG TARGETOS
+ARG TARGETARCH
+
+# -trimpath strips local paths from the binary; -s -w drops the symbol table and
+# DWARF debug info to shrink it. The source is bind-mounted read-only; the module
+# and build caches are reused across builds.
+RUN --mount=type=bind,source=api,target=/src \
+    --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    go build -trimpath -ldflags="-s -w" -o /out/api .
+
+# ==============================================================================
+# Stage 3: Runtime — s6-overlay supervising Caddy (and, later, the api)
 #
 # Multiple processes now share one container, so the container runtime can no
 # longer restart a dead process for us. s6-overlay takes that role: it
@@ -82,8 +114,14 @@ ENV S6_BEHAVIOUR_IF_STAGE2_FAILS=2
 # Deliver `docker stop`'s SIGTERM straight to Caddy (the CMD) so it shuts down
 # gracefully; s6-overlay then tears down the rest of the tree.
 ENV S6_CMD_RECEIVE_SIGNALS=1
-# S6_CMD_WAIT_FOR_SERVICES* are left at their defaults: no supervised longrun has
-# to be up before Caddy starts (the only one, api, ships disabled).
+# S6_CMD_WAIT_FOR_SERVICES* are left at their defaults: Caddy need not wait for
+# the api to be up before starting — until the api is ready Caddy just returns
+# 502 for /api/*, which the website's loadQuote.ts already handles gracefully.
+
+# gin runs in release mode in the image (no debug logging / startup warnings);
+# with-contenv makes this visible to the supervised api process. Override for
+# local debugging by setting GIN_MODE=debug.
+ENV GIN_MODE=release
 
 # --- Caddy configuration (split by purpose) ----------------------------------
 # sites/     -> hosted content (the Astro site on clowa.dev)
@@ -95,15 +133,19 @@ COPY docker/caddy/ /etc/caddy/
 # api's assets) can live side-by-side under /srv later.
 COPY --from=builder /app/dist /srv/clowa.dev
 
+# The Go api binary, supervised by s6-overlay and reverse-proxied by Caddy on
+# 127.0.0.1:8080. Referenced by docker/s6-overlay/s6-rc.d/api/run.
+COPY --from=api-builder /out/api /usr/local/bin/api
+
 # --- s6-overlay service definitions ------------------------------------------
 # run/finish scripts must be executable; --chmod=0755 covers the whole tree
 # (the data files it also touches don't mind being executable).
 COPY --chmod=0755 docker/s6-overlay/s6-rc.d/ /etc/s6-overlay/s6-rc.d/
 
-# No custom user bundle is shipped: Caddy is the CMD (not a supervised service)
-# and the only defined service (api) ships DISABLED, so s6-overlay's default
-# empty `user` bundle autostarts nothing. See docker/README.md to enable a
-# supervised service later.
+# User bundle: the set of services s6-overlay autostarts. It lists the
+# api-pipeline (api + its log consumer), so the api starts with the container.
+# Caddy is the CMD (not a supervised service), so it is not listed here.
+COPY docker/s6-overlay/user-bundles.d/ /etc/s6-overlay/user-bundles.d/
 
 # Log directory for supervised services: s6-log runs as `nobody`, so it must own
 # it; 0755 keeps rotated logs world-readable for a future monitoring agent.

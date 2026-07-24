@@ -1,14 +1,6 @@
 #!/command/with-contenv sh
-# Future Go web API — NOT IMPLEMENTED YET and shipped DISABLED.
-#
-# It is "disabled" purely by being absent from user/contents.d/ (there is no
-# api-pipeline marker there). The `down` file that s6-rc.d source dirs seem to
-# support is IGNORED by s6-rc-compile, so omission from the user bundle is the
-# only reliable way to keep a service defined-but-not-started. Enable it later
-# by adding an empty file at user/contents.d/api-pipeline (rebuild), or at
-# runtime with `s6-rc -u change api-pipeline`.
-#
-# Listens on loopback only; Caddy will reverse_proxy to 127.0.0.1:8080.
+# The Go web API (source in /api, binary at /usr/local/bin/api).
+# Listens on loopback only; Caddy reverse_proxies /api/* to 127.0.0.1:8080.
 exec 2>&1
 
 # --- Resource limits (disabled) — see caddy/run for details ------------------
