@@ -17,14 +17,16 @@ docker/
 │       ├── qunis.day.caddy        301 qunis.day     -> qunisday.qunis.de
 │       ├── me.clowa.de.caddy      301 me.clowa.de   -> clowa.dev
 │       └── www.clowa.dev.caddy    301 www.clowa.dev -> clowa.dev
-└── s6-overlay/s6-rc.d/        -> /etc/s6-overlay/s6-rc.d/   (supporting services)
-    └── api/ + api-log/        the future Go API + its log pipeline (DISABLED)
+└── s6-overlay/                -> /etc/s6-overlay/          (supervision tree)
+    ├── s6-rc.d/               service definitions
+    │   └── api/ + api-log/    the Go API + its log pipeline
+    └── user-bundles.d/        autostart set — lists `api-pipeline`
 ```
 
 Caddy is **not** an s6-rc service — it is the `CMD`, so there is no `caddy/`
-service directory. Autostart of supervised services is governed by s6-overlay's
-default (empty) `user` bundle; nothing autostarts today (the only defined
-service, `api`, ships disabled).
+service directory. Autostart of supervised services is governed by the `user`
+bundle (`user-bundles.d/user/contents.d/`); it lists `api-pipeline`, so the
+`api` (and its log consumer) starts with the container.
 
 ## Caddy: sites vs. redirects
 
@@ -65,13 +67,20 @@ Rotation keeps 20 archives, rolling at ~1 MiB (`n20 s1000000`). The directory is
 - **Caddy (`CMD`)** — bounded by the container/cgroup limits (`cpuLimit` / `memoryLimit` in [`serverless.yml`](../serverless.yml)). To apply per-process rlimits instead, wrap the `CMD` with `s6-softlimit` (a commented example sits next to the `CMD` in the Dockerfile).
 - **Supervised services** — each `run` script has a commented `s6-softlimit` wrapper (POSIX rlimits — effective for memory on single-process daemons; there is no rlimit for CPU share, so use container limits for CPU).
 
-## Enabling the `api` (when the binary exists)
+## The `api` service
 
-The `api` is defined but **not** started — it is absent from the `user` bundle. (A `down` file in the source dir does **not** work; s6-rc-compile ignores it.) To enable it:
+The `api` (Go source in [`../api`](../api), binary at `/usr/local/bin/api`) is a
+**critical, supervised** service. Its wiring:
 
-1. Add the binary to the image at `/usr/local/bin/api`.
-2. Create the autostart marker and ship it: add `docker/s6-overlay/user-bundles.d/user/type` (containing `bundle`) + an empty `docker/s6-overlay/user-bundles.d/user/contents.d/api-pipeline`, and `COPY docker/s6-overlay/user-bundles.d/ /etc/s6-overlay/user-bundles.d/` in the Dockerfile. (For a quick runtime test: `s6-rc -u change api-pipeline`.)
-3. Add a `reverse_proxy 127.0.0.1:8080` route in the Caddy config.
+1. The Dockerfile builds the binary in a cross-compiling Go stage and `COPY`s it
+   to `/usr/local/bin/api`.
+2. The `user` bundle (`user-bundles.d/user/`, a `bundle` with a
+   `contents.d/api-pipeline` marker) is `COPY`ed to `/etc/s6-overlay/`, telling
+   s6-overlay to start the `api-pipeline` (the `api` longrun + its `api-log`
+   consumer) with the container. Bundle membership is the on/off switch — an
+   s6-rc.d `down` file does **not** work, as s6-rc-compile ignores it.
+3. `docker/caddy/sites/clowa.dev.caddy` `reverse_proxy`es `/api/*` to
+   `127.0.0.1:8080`.
 
 ## Adding a supporting (restart-only) service
 

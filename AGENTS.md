@@ -7,7 +7,7 @@ Mono-repo for the personal website **clowa.dev**, built and shipped as a **singl
 The container runs **Caddy as its `CMD`** (the primary process) under **s6-overlay** (`/init`, PID 1), which also supervises the supporting services. Following the [s6-overlay "Usage" pattern](https://github.com/just-containers/s6-overlay#usage), the main daemon runs as `CMD`: when it exits, s6-overlay tears the whole container down and the container exits with Caddy's exit code.
 
 - **caddy** — the container's `CMD`/primary process: serves the Astro static site (`root * /srv/clowa.dev`), performs 301 redirects, and exports OpenTelemetry data (see Observability). Logs to stdout/stderr (`docker logs` / Scaleway).
-- **api** — Go backend, **not implemented yet**. A **supervised, critical** s6-rc service that ships DISABLED — it is absent from the s6 `user` bundle, so s6-overlay won't autostart it (an s6-rc.d `down` file would be silently ignored). It will listen on loopback (`127.0.0.1:8080`) and Caddy will `reverse_proxy` to it once the binary exists. Will use PostgreSQL. No `api/` source dir yet.
+- **api** — Go backend (gin), source in [`api/`](./api/). A **supervised, critical** s6-rc service, autostarted via the s6 `user` bundle. Listens on loopback (`127.0.0.1:8080`); Caddy `reverse_proxy`es `/api/*` to it. Serves `GET /api/quote` (a static quote) today; quotes will move to PostgreSQL behind the existing `quote.Repository` interface. See [`api/README.md`](./api/README.md).
 
 **Failure policy**: **Caddy** is the `CMD`, so if it dies the container exits with its code and the orchestrator reschedules it. Among the **supervised** services, critical ones (`api`) carry a `finish` script that halts the whole container on exit; supporting ones (e.g. a future otel-collector) omit `finish` and are restarted in place. Supervised services log to their own rotating file (`/var/log/<svc>/current`) via an `s6-log` pipeline; Caddy logs to stdout.
 
@@ -16,6 +16,7 @@ Caddy config lives in `docker/caddy/`: `Caddyfile` imports `sites/*.caddy` (host
 ## Layout
 
 - `swa/` — the Astro app. **All npm/site work happens here**, not the repo root.
+- `api/` — the Go backend (gin). Self-contained Go module; `go test ./...` / `go run .` run from inside `api/`. See [`api/README.md`](./api/README.md).
 - `docker/` — container runtime config: `caddy/` (split Caddyfile + `sites/`/`redirects/`) and `s6-overlay/s6-rc.d/` (per-process supervision). See [`docker/README.md`](./docker/README.md).
 - `Dockerfile` (root) builds the image: an Astro build stage, then a s6-overlay + Caddy runtime stage. `serverless.yml` deploys the prebuilt image to Scaleway.
 - Root `package.json` holds only the deploy tooling (`osls`, `serverless-scaleway-functions`) — no app code.
