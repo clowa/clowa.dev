@@ -10,22 +10,24 @@ package main
 import (
 	"context"
 	"errors"
-	"log"
+	"log/slog"
 	"os"
 	"time"
 
 	"go.opentelemetry.io/contrib/exporters/autoexport"
 	otelruntime "go.opentelemetry.io/contrib/instrumentation/runtime"
 	"go.opentelemetry.io/otel"
+	otellog "go.opentelemetry.io/otel/log/global"
 	"go.opentelemetry.io/otel/propagation"
+	sdklog "go.opentelemetry.io/otel/sdk/log"
 	sdkmetric "go.opentelemetry.io/otel/sdk/metric"
 	"go.opentelemetry.io/otel/sdk/resource"
 	sdktrace "go.opentelemetry.io/otel/sdk/trace"
 )
 
-// setupOTel installs the global tracer/meter providers and text-map propagator —
-// all driven by OTEL_* env vars — plus Go runtime metrics, and returns a shutdown
-// func that flushes and releases them.
+// setupOTel installs the global tracer, meter and logger providers and the
+// text-map propagator — all driven by OTEL_* env vars — plus Go runtime metrics,
+// and returns a shutdown func that flushes and releases them.
 //
 // It is a no-op (telemetry disabled, no-op global providers left in place) when
 // OTEL_EXPORTER_OTLP_ENDPOINT is unset. That keeps local development quiet while
@@ -34,7 +36,7 @@ import (
 // never leaks a half-initialised provider.
 func setupOTel(ctx context.Context) (func(context.Context) error, error) {
 	if os.Getenv("OTEL_EXPORTER_OTLP_ENDPOINT") == "" {
-		log.Println("otel: disabled (OTEL_EXPORTER_OTLP_ENDPOINT unset)")
+		slog.Info("otel disabled", "reason", "OTEL_EXPORTER_OTLP_ENDPOINT unset")
 		return func(context.Context) error { return nil }, nil
 	}
 
@@ -89,6 +91,20 @@ func setupOTel(ctx context.Context) (func(context.Context) error, error) {
 	)
 	shutdownFns = append(shutdownFns, meterProvider.Shutdown)
 	otel.SetMeterProvider(meterProvider)
+
+	// Logs. autoexport builds the OTLP log exporter from the same vars; the batch
+	// processor buffers records. The global logger provider backs the otelslog
+	// bridge (see logging.go), so application logs ship over OTLP once this is set.
+	logExporter, err := autoexport.NewLogExporter(ctx)
+	if err != nil {
+		return shutdown, errors.Join(err, shutdown(ctx))
+	}
+	loggerProvider := sdklog.NewLoggerProvider(
+		sdklog.WithProcessor(sdklog.NewBatchProcessor(logExporter)),
+		sdklog.WithResource(res),
+	)
+	shutdownFns = append(shutdownFns, loggerProvider.Shutdown)
+	otellog.SetLoggerProvider(loggerProvider)
 
 	// Go runtime metrics (goroutines, GC, heap) via the global meter provider.
 	if err := otelruntime.Start(otelruntime.WithMinimumReadMemStatsInterval(time.Second)); err != nil {

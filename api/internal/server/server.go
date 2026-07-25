@@ -22,14 +22,14 @@ const scopeName = "github.com/clowa/clowa.dev/api"
 // GIN_MODE environment variable, which gin reads on import.
 func New(quotes quote.Repository) *gin.Engine {
 	engine := gin.New()
-	// otelgin first, so its span wraps the whole request (including the Logger
-	// and Recovery below). It uses the global tracer/meter providers and
+	// otelgin first, so its span wraps the whole request (including the request
+	// logger and Recovery below). It uses the global tracer/meter providers and
 	// propagator set in setupOTel; with telemetry disabled those are no-ops, so
-	// this is safe in tests and local runs. Logger writes request lines to
-	// stdout (captured by the api's s6-log pipeline and shipped by the
-	// collector's filelog receiver); Recovery turns a panicking handler into a
+	// this is safe in tests and local runs. requestLogger then emits a structured
+	// JSON line per request (to stdout and, via the OTLP bridge, to the collector),
+	// correlated to the otelgin span; Recovery turns a panicking handler into a
 	// 500 instead of crashing the process.
-	engine.Use(otelgin.Middleware(scopeName), gin.Logger(), gin.Recovery())
+	engine.Use(otelgin.Middleware(scopeName), requestLogger(), gin.Recovery())
 
 	quote.NewHandler(quotes).RegisterRoutes(engine)
 
