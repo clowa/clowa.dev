@@ -43,6 +43,19 @@ receivers:
           parse_from: attributes.traceID
         span_id:
           parse_from: attributes.spanID
+      # Strip visitor-IP-bearing request headers before export. With no
+      # trusted_proxies in Caddy, remote_ip/client_ip are the Scaleway edge (not a
+      # visitor, so retained); the real visitor IP only rides in X-Forwarded-For /
+      # X-Real-Ip. Removing them here keeps the visitor IP out of Middleware — it
+      # still lands transiently in the on-disk access.log, which never leaves the
+      # container. The guards skip runtime.log lines (no request object), which
+      # would otherwise trip the remove operator's missing-field error.
+      - type: remove
+        if: 'attributes.request != nil and attributes.request.headers != nil and attributes.request.headers["X-Forwarded-For"] != nil'
+        field: attributes.request.headers["X-Forwarded-For"]
+      - type: remove
+        if: 'attributes.request != nil and attributes.request.headers != nil and attributes.request.headers["X-Real-Ip"] != nil'
+        field: attributes.request.headers["X-Real-Ip"]
 
 processors:
   # Refuse data instead of OOM-killing the container when memory is tight.
