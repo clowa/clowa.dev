@@ -91,6 +91,29 @@ func TestRequestLogOmitsTraceWhenNoSpan(t *testing.T) {
 	}
 }
 
+// With trusted proxies restricted to loopback (as main configures them), a
+// client-supplied X-Forwarded-For arriving from an untrusted peer must be ignored:
+// the logged client_ip is the real socket peer, not the spoofed header value.
+func TestRequestLogClientIPIgnoresSpoofedForwardedFor(t *testing.T) {
+	otel.SetTracerProvider(nooptrace.NewTracerProvider())
+	buf := captureLogs(t)
+	gin.SetMode(gin.TestMode)
+	engine := server.New(quote.NewStaticRepository())
+	if err := engine.SetTrustedProxies([]string{"127.0.0.1"}); err != nil {
+		t.Fatalf("SetTrustedProxies: %v", err)
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/api/quote", nil)
+	req.RemoteAddr = "203.0.113.7:54321" // untrusted peer
+	req.Header.Set("X-Forwarded-For", "9.9.9.9")
+	engine.ServeHTTP(httptest.NewRecorder(), req)
+
+	rec := findRequestLog(t, buf)
+	if got := rec["client_ip"]; got != "203.0.113.7" {
+		t.Errorf("client_ip = %v, want 203.0.113.7 (spoofed X-Forwarded-For must be ignored)", got)
+	}
+}
+
 func allZero(id string) bool {
 	for _, c := range id {
 		if c != '0' {

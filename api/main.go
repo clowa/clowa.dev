@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -31,6 +32,32 @@ func listenAddr() string {
 		return addr
 	}
 	return defaultAddr
+}
+
+// defaultTrustedProxies is the single reverse proxy in front of the api: Caddy on
+// loopback. Trusting only it means c.ClientIP() — used in request logging and by
+// otelgin's client.address span attribute — reflects the upstream proxy, and a
+// client-supplied X-Forwarded-For from any other peer is ignored.
+var defaultTrustedProxies = []string{"127.0.0.1"}
+
+// trustedProxies returns the proxy CIDRs/IPs gin should trust for X-Forwarded-For,
+// from API_TRUSTED_PROXIES (comma-separated) or defaultTrustedProxies when unset or
+// blank. Override for topologies with an extra hop in front of Caddy.
+func trustedProxies() []string {
+	raw := os.Getenv("API_TRUSTED_PROXIES")
+	if raw == "" {
+		return defaultTrustedProxies
+	}
+	var proxies []string
+	for _, p := range strings.Split(raw, ",") {
+		if p = strings.TrimSpace(p); p != "" {
+			proxies = append(proxies, p)
+		}
+	}
+	if len(proxies) == 0 {
+		return defaultTrustedProxies
+	}
+	return proxies
 }
 
 func main() {
@@ -73,9 +100,16 @@ func run() error {
 	// database exists — the rest of the wiring stays the same.
 	repo := quote.NewStaticRepository()
 
+	engine := server.New(repo)
+	// Restrict which upstreams may set the client IP via X-Forwarded-For. Fails
+	// fast on an invalid CIDR/IP rather than silently falling back to trusting all.
+	if err := engine.SetTrustedProxies(trustedProxies()); err != nil {
+		return fmt.Errorf("trusted proxies: %w", err)
+	}
+
 	srv := &http.Server{
 		Addr:    listenAddr(),
-		Handler: server.New(repo),
+		Handler: engine,
 		// Guard against slow-loris style stalls on the header read.
 		ReadHeaderTimeout: 5 * time.Second,
 	}
