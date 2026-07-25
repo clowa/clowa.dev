@@ -1,7 +1,7 @@
 import { logger } from './logger'
 
-// Timeout for http call
-// Quote API can take up to 30 seconds on a double cold start
+// Abort the quote fetch after 8s. A cold-started API can take longer; when it
+// does we fall back to the static default quote below rather than block the page.
 const timeout: number = 8000
 
 interface Quote {
@@ -22,7 +22,6 @@ let quote: Quote = {
 
 // Get current website name
 const canonicalURL: string = location.protocol + "//" + location.host
-console.log("Detected website name " + canonicalURL)
 
 try {
   const controller = new AbortController()
