@@ -110,8 +110,13 @@ func run() error {
 	srv := &http.Server{
 		Addr:    listenAddr(),
 		Handler: engine,
-		// Guard against slow-loris style stalls on the header read.
+		// General-purpose timeouts to bound slow or idle clients. The handler is a
+		// fast static read, so these are generous; ReadHeaderTimeout specifically
+		// guards against slow-loris stalls on the header read.
 		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       10 * time.Second,
+		WriteTimeout:      15 * time.Second,
+		IdleTimeout:       60 * time.Second,
 	}
 
 	// Serve in the background so run can block on shutdown signals.
