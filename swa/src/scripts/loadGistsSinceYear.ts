@@ -1,7 +1,8 @@
 import { logger } from './logger'
+import { assertGitHubOk } from './github'
 
 interface Gist {
-  id: any
+  id: string
   description: string
   html_url: string
 }
@@ -25,10 +26,7 @@ async function loadGistsSinceYear(year: number, month: number = 0, day: number =
     headers: headers,
   })
 
-  if (!response.ok) {
-    logger.response(response.status, response.statusText, url)
-    throw new Error(`Network response was not ok ${response.statusText}`)
-  }
+  assertGitHubOk(response, url)
   logger.response(response.status, response.statusText, url)
 
   const gists: Gist[] = await response.json()

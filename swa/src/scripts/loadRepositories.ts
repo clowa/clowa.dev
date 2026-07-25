@@ -1,4 +1,5 @@
 import { logger } from './logger'
+import { assertGitHubOk } from './github'
 
 interface Repository {
   id: number
@@ -28,19 +29,11 @@ async function loadRepositories(repositoryNames: string[]) {
       headers: headers,
     })
 
-    if (!response.ok) {
-      logger.response(response.status, response.statusText, url)
-      throw new Error(`Network response was not ok ${response.statusText}`)
-    }
+    assertGitHubOk(response, url)
     logger.response(response.status, response.statusText, url)
 
-    try {
-      const repo: Repository = await response.json()
-      repositories.push(repo)
-    } catch (error) {
-      logger.error(`Failed to parse repository data for ${r}`, error)
-      continue
-    }
+    const repo: Repository = await response.json()
+    repositories.push(repo)
   }
 
   return repositories
