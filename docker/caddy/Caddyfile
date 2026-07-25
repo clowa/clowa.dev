@@ -19,10 +19,11 @@
 	}
 
 	# Push Caddy's runtime metrics (request counts, latencies, status codes, Go
-	# runtime, etc.) to Grafana Cloud via OTLP. Endpoint, protocol, and auth come
-	# from the standard OTEL_EXPORTER_OTLP_* env vars (see serverless.yml). When
-	# those are unset (local runs) Caddy still serves normally; only the periodic
-	# metric export fails in the background. Requires Caddy >= 2.11.3 for `otlp`.
+	# runtime, etc.) via OTLP to the in-container otel-collector, which forwards
+	# them to Middleware. Endpoint and protocol come from the standard
+	# OTEL_EXPORTER_OTLP_* env vars (see serverless.yml). When those are unset
+	# (local runs) Caddy still serves normally; only the periodic metric export
+	# fails in the background. Requires Caddy >= 2.11.3 for `otlp`.
 	metrics {
 		otlp
 	}
