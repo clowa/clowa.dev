@@ -9,6 +9,10 @@
 	# OpenTelemetry tracing + JSON access log (see the (otel) snippet in Caddyfile).
 	import otel
 
+	# Security response headers (Host-scoped to clowa.dev; see the (security)
+	# snippet in Caddyfile). Includes HSTS for clowa.dev.
+	import security
+
 	# --- JSON API ------------------------------------------------------------
 	# The Go api (s6-overlay-supervised, loopback-only) owns the whole /api/*
 	# path namespace and currently serves GET /api/quote. reverse_proxy forwards

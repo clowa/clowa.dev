@@ -49,6 +49,35 @@
 	}
 }
 
+# --- Security response headers -----------------------------------------------
+# Imported by the primary web hosts (the Astro site and the me./www. redirects).
+# Host-scoped via @app so importing it into the catch-all `:80` site block only
+# affects clowa.dev — not the raw Scaleway URL, localhost, or other hosts this
+# container may serve. HSTS is intentionally clowa.dev-only (@hsts): subdomains
+# are not covered, so no includeSubDomains/preload.
+(security) {
+	@app host clowa.dev me.clowa.de www.clowa.dev
+	header @app {
+		# Drop the version-fingerprinting Server header.
+		-Server
+		# Block MIME-type sniffing.
+		X-Content-Type-Options "nosniff"
+		# Disallow framing (clickjacking); frame-ancestors below is the modern form.
+		X-Frame-Options "DENY"
+		# Send only the origin on cross-origin navigations.
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# 'unsafe-inline' is required: Astro inlines a small hoisted script and
+		# scoped/Shiki styles, whose per-build hashes can't be pinned in a static
+		# header. Rybbit is the analytics script/beacon; jsDelivr serves Pico.css
+		# on the blog/legal pages. Everything else is same-origin.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://app.rybbit.io; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self'; font-src 'self'; connect-src 'self' https://app.rybbit.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+	}
+	# TLS is terminated at the Scaleway edge; the browser still honours HSTS sent
+	# over the proxied connection. clowa.dev only (no includeSubDomains/preload).
+	@hsts host clowa.dev
+	header @hsts Strict-Transport-Security "max-age=31536000"
+}
+
 # --- Hosted content ----------------------------------------------------------
 # One file per served site. These configs only serve content; keep redirect
 # logic out of here so the two concerns stay cleanly separated on disk.
