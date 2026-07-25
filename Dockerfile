@@ -67,13 +67,44 @@ RUN --mount=type=bind,source=api,target=/src \
     go build -trimpath -ldflags="-s -w" -o /out/api .
 
 # ==============================================================================
-# Stage 3: Runtime — Caddy (the CMD) + the s6-overlay-supervised api
+# Stage 3: Build a minimal OpenTelemetry Collector
+#
+# The OpenTelemetry Collector Builder (ocb) compiles a collector containing only
+# the components this container needs (see docker/otel-collector/builder-config.yaml)
+# instead of shipping the ~200 MB contrib distribution. Cross-compiled like the api
+# stage: runs on $BUILDPLATFORM, emits a static $TARGETARCH binary, CGO disabled.
+# ==============================================================================
+FROM --platform=$BUILDPLATFORM golang:1.26-alpine AS otelcol-builder
+
+# Keep ocb pinned to the collector release the manifest's components target.
+ARG OCB_VERSION=0.157.0
+
+WORKDIR /build
+
+# Install the builder once; its own module downloads share the build cache.
+RUN --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go install "go.opentelemetry.io/collector/cmd/builder@v${OCB_VERSION}"
+
+# TARGETOS/TARGETARCH drive cross-compilation of the generated collector. -s -w
+# strips the symbol table and DWARF info to shrink the binary (as in the api stage).
+# The manifest's output_path is ./_build, so the binary lands at /build/_build/otelcol.
+ARG TARGETOS
+ARG TARGETARCH
+RUN --mount=type=bind,source=docker/otel-collector/builder-config.yaml,target=/build/builder-config.yaml \
+    --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} \
+    builder --config /build/builder-config.yaml --ldflags="-s -w"
+
+# ==============================================================================
+# Stage 4: Runtime — Caddy (the CMD) + the s6-overlay-supervised api & collector
 #
 # Several processes share one container, so the container runtime cannot restart
 # a dead process for us. Caddy runs as the CMD (its exit stops the container);
-# s6-overlay supervises the api (and future supporting services), restarting
-# supporting ones and — via per-service finish scripts — halting the whole
-# container when a CRITICAL supervised service dies.
+# s6-overlay supervises the api and the otel-collector, restarting supporting
+# ones (the collector) and — via per-service finish scripts — halting the whole
+# container when a CRITICAL supervised service (the api) dies.
 #
 # 2.11.3+ is required for native OTLP metrics push (`metrics { otlp }`, PR #7664);
 # tracing has been available since 2.5. Both are configured via OTEL_* env vars.
@@ -138,14 +169,21 @@ COPY --from=builder /app/dist /srv/clowa.dev
 # 127.0.0.1:8080. Referenced by docker/s6-overlay/s6-rc.d/api/run.
 COPY --from=api-builder /out/api /usr/local/bin/api
 
+# The minimal otel-collector binary + its config, supervised by s6-overlay as a
+# supporting (restart-only) service. It is the single telemetry egress to
+# Middleware. Referenced by docker/s6-overlay/s6-rc.d/otel-collector/run.
+COPY --from=otelcol-builder /build/_build/otelcol /usr/local/bin/otelcol
+COPY docker/otel-collector/config.yaml /etc/otel-collector/config.yaml
+
 # --- s6-overlay service definitions ------------------------------------------
 # run/finish scripts must be executable; --chmod=0755 covers the whole tree
 # (the data files it also touches don't mind being executable).
 COPY --chmod=0755 docker/s6-overlay/s6-rc.d/ /etc/s6-overlay/s6-rc.d/
 
 # User bundle: the set of services s6-overlay autostarts. It lists the
-# api-pipeline (api + its log consumer), so the api starts with the container.
-# Caddy is the CMD (not a supervised service), so it is not listed here.
+# api-pipeline (api + its log consumer) and the otel-collector-pipeline (collector
+# + its log consumer), so both start with the container. Caddy is the CMD (not a
+# supervised service), so it is not listed here.
 COPY docker/s6-overlay/user-bundles.d/ /etc/s6-overlay/user-bundles.d/
 
 # Log directory for the supervised api: s6-log runs as `nobody`, so it must own
@@ -160,6 +198,11 @@ RUN mkdir -p /var/log/api \
 # (also root) tails these files and forwards them.
 RUN mkdir -p /var/log/caddy \
     && chmod 0755 /var/log/caddy
+
+# Log directory for the supervised otel-collector: its s6-log runs as `nobody`.
+RUN mkdir -p /var/log/otel-collector \
+    && chown nobody:nobody /var/log/otel-collector \
+    && chmod 0755 /var/log/otel-collector
 
 EXPOSE 80
 
