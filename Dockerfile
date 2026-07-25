@@ -148,12 +148,18 @@ COPY --chmod=0755 docker/s6-overlay/s6-rc.d/ /etc/s6-overlay/s6-rc.d/
 # Caddy is the CMD (not a supervised service), so it is not listed here.
 COPY docker/s6-overlay/user-bundles.d/ /etc/s6-overlay/user-bundles.d/
 
-# Log directory for supervised services: s6-log runs as `nobody`, so it must own
-# it; 0755 keeps rotated logs world-readable for a future monitoring agent.
-# Caddy, being the CMD, logs to stdout/stderr instead.
+# Log directory for the supervised api: s6-log runs as `nobody`, so it must own
+# it; 0755 keeps rotated logs world-readable for the otel-collector's filelog
+# receiver.
 RUN mkdir -p /var/log/api \
     && chown nobody:nobody /var/log/api \
     && chmod 0755 /var/log/api
+
+# Log directory for Caddy's JSON access/runtime logs (see docker/caddy/Caddyfile).
+# Caddy runs as root (the CMD), so root ownership is fine; the otel-collector
+# (also root) tails these files and forwards them.
+RUN mkdir -p /var/log/caddy \
+    && chmod 0755 /var/log/caddy
 
 EXPOSE 80
 

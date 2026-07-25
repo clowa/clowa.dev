@@ -7,5 +7,6 @@
 # NOTE: for this to reach Caddy in production, `clowa.de` must also be attached
 # as a custom_domain in serverless.yml (and its DNS pointed at Scaleway).
 clowa.de:80 {
+	import otel
 	redir https://github.com/clowa permanent
 }

@@ -6,9 +6,8 @@
 # `<host>:80` addresses, which are more specific and therefore win over this
 # catch-all for their host.
 :80 {
-	tracing {
-		span {http.request.method}
-	}
+	# OpenTelemetry tracing + JSON access log (see the (otel) snippet in Caddyfile).
+	import otel
 
 	# --- JSON API ------------------------------------------------------------
 	# The Go api (s6-overlay-supervised, loopback-only) owns the whole /api/*
