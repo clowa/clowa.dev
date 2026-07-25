@@ -45,7 +45,7 @@ Caddy config lives in `docker/caddy/`: `Caddyfile` imports `sites/*.caddy` (host
 
 ## Observability (OpenTelemetry → Middleware)
 
-Every process is instrumented with **vendor-neutral OpenTelemetry** and exports to **[Middleware](https://cedric-ahlers.middleware.io)**. Standard `OTEL_*` env vars keep the backend swappable.
+Every process is instrumented with **vendor-neutral OpenTelemetry** and exports to **[Middleware](https://clowa-production.middleware.io)**. Standard `OTEL_*` env vars keep the backend swappable.
 
 **Egress model.** An **in-container OpenTelemetry Collector** (a supporting, restart-only s6 service — see [`docker/otel-collector/`](./docker/otel-collector/)) is the **single egress**: Caddy and the api send OTLP to it on loopback (`127.0.0.1:4317`, gRPC), and it forwards traces/metrics/logs to Middleware. The collector is the **only holder of the Middleware API key**, so the producers stay agentless and secret-free. It is built minimally with the OpenTelemetry Collector Builder ([`builder-config.yaml`](./docker/otel-collector/builder-config.yaml)) rather than shipping the contrib distribution.
 
