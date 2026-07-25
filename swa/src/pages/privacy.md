@@ -2,7 +2,7 @@
 layout: '@layouts/LegalPage.astro'
 title: 'Privacy Policy'
 draft: false
-lastModified: 2025-12
+lastModified: 2026-07
 description: 'Our commitment to protecting your data and privacy.'
 categories: ['legal', 'privacy']
 ---
@@ -56,6 +56,7 @@ Our data processors:
 
 - **Rybbit.com** — Web analytics. See their [privacy policy](https://rybbit.com/privacy).
 - **Scaleway SAS** — Hosting (France). See their [privacy policy](https://www.scaleway.com/en/privacy-policy/).
+- **Middleware.io** — Application observability (traces, metrics, and logs used to operate and monitor the site). Visitor IP addresses are removed before telemetry is sent. See their [privacy policy](https://middleware.io/privacy-policy/).
 
 ## Your Data Rights
 
