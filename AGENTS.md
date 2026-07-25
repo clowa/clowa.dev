@@ -40,12 +40,25 @@ Caddy config lives in `docker/caddy/`: `Caddyfile` imports `sites/*.caddy` (host
 ## CI (`.github/workflows/`)
 
 - `ci.yaml` (`quality` job; on PRs + push to `main`; Node 22): Prettier `--check`, ESLint + Stylelint, markdownlint, `astro check`.
-- `deploy.yaml` (push to `main`): a `build` job pushes an `amd64` image via `docker/build-push-action` (GHA cache), then a `deploy` job runs `serverless deploy` (osls) with the image ref + Scaleway/Grafana secrets.
+- `deploy.yaml` (push to `main`): a `build` job pushes an `amd64` image via `docker/build-push-action` (GHA cache), then a `deploy` job runs `serverless deploy` (osls) with the image ref + Scaleway secrets and the `MIDDLEWARE_API_KEY` secret.
 - `cleanup-registry.yaml` (weekly Sun 03:00 UTC + manual): prunes old registry tags via the `scaleway-registry-cleanup` composite action (keeps last 10; `latest` protected).
 
-## Observability (OpenTelemetry → Grafana Cloud)
+## Observability (OpenTelemetry → Middleware)
 
-TODO
+Every process is instrumented with **vendor-neutral OpenTelemetry** and exports to **[Middleware](https://cedric-ahlers.middleware.io)**. Standard `OTEL_*` env vars keep the backend swappable.
+
+**Egress model.** An **in-container OpenTelemetry Collector** (a supporting, restart-only s6 service — see [`docker/otel-collector/`](./docker/otel-collector/)) is the **single egress**: Caddy and the api send OTLP to it on loopback (`127.0.0.1:4317`, gRPC), and it forwards traces/metrics/logs to Middleware. The collector is the **only holder of the Middleware API key**, so the producers stay agentless and secret-free. It is built minimally with the OpenTelemetry Collector Builder ([`builder-config.yaml`](./docker/otel-collector/builder-config.yaml)) rather than shipping the contrib distribution.
+
+**Services** (both under `service.namespace=clowa`, env in `deployment.environment.name`):
+
+| Service | Process | Signals |
+| --- | --- | --- |
+| `web-proxy` | Caddy | Traces (`tracing` on every site + redirect), metrics (`metrics { otlp }`), JSON logs (file → collector `filelog`, since Caddy has no native OTLP log export) |
+| `quote-api` | Go api | Traces + metrics (otelgin) + Go runtime metrics, and structured logs via `slog` → OTLP (see [`api/otel.go`](./api/otel.go), [`api/logging.go`](./api/logging.go)) |
+
+**Config.** Non-secret `OTEL_*` + `MIDDLEWARE_OTLP_ENDPOINT` live in [`serverless.yml`](./serverless.yml); the api overrides `OTEL_SERVICE_NAME=quote-api` in its s6 `run`. The `MIDDLEWARE_API_KEY` secret is a Scaleway extra-secure env var, sourced from the `MIDDLEWARE_API_KEY` GitHub Actions secret (CI) or 1Password (`task deploy`). Any log not emitted natively as an OTEL log (Caddy's access + runtime logs) is written as **JSON** to files the collector tails.
+
+**Local dev.** With `OTEL_EXPORTER_OTLP_ENDPOINT` unset, the api's telemetry is a no-op and Caddy's export fails quietly in the background; the collector only runs in the image.
 
 ## Lessons Learned
 

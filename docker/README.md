@@ -17,10 +17,14 @@ docker/
 │       ├── qunis.day.caddy        301 qunis.day     -> qunisday.qunis.de
 │       ├── me.clowa.de.caddy      301 me.clowa.de   -> clowa.dev
 │       └── www.clowa.dev.caddy    301 www.clowa.dev -> clowa.dev
+├── otel-collector/            -> /etc/otel-collector/   (OpenTelemetry Collector)
+│   ├── config.yaml           receivers/processors/exporters (single egress to Middleware)
+│   └── builder-config.yaml    ocb manifest — builds the minimal collector binary
 └── s6-overlay/                -> /etc/s6-overlay/          (supervision tree)
     ├── s6-rc.d/               service definitions
-    │   └── api/ + api-log/    the Go API + its log pipeline
-    └── user-bundles.d/        autostart set — lists `api-pipeline`
+    │   ├── api/ + api-log/            the Go API + its log pipeline
+    │   └── otel-collector/ + …-log/   the collector + its log pipeline
+    └── user-bundles.d/        autostart set — `api-pipeline` + `otel-collector-pipeline`
 ```
 
 Caddy is **not** an s6-rc service — it is the `CMD`, so there is no `caddy/`
@@ -49,18 +53,22 @@ A single container can't rely on the runtime to restart a dead process, so the p
 
 - **Caddy (`CMD`, primary)** — launched by `/init` after the supervision tree is up. If Caddy exits for any reason, s6-overlay tears the whole container down and the container exits **with Caddy's exit code**, so the orchestrator reschedules it. This is the native s6-overlay `CMD` behavior — no `finish` script needed.
 - **Critical supervised services** (`api`) — a `finish` script writes the exit code to `/run/s6-linux-init-container-results/exitcode` and runs `/run/s6/basedir/bin/halt`, so **the whole container exits** on failure too.
-- **Supporting supervised services** (e.g. a future otel-collector) — ship **without** a `finish` script, so s6-supervise just **restarts** them in place.
+- **Supporting supervised services** (the `otel-collector`) — ship **without** a `finish` script, so s6-supervise just **restarts** them in place. Telemetry is not container-critical, so a collector crash must not take the container down.
 
 ## Logging
 
-- **Caddy** logs to **stdout/stderr** → `docker logs` / Scaleway Cockpit (the standard `CMD` pattern).
+All logs ultimately reach **Middleware** via the `otel-collector` (see the repo root `AGENTS.md` → Observability). How each process gets them there differs:
+
+- **Caddy** has no native OTLP log export, so it writes **JSON** to files the collector tails via its `filelog` receiver: `/var/log/caddy/access.log` (per-site access logs, from the `(otel)` snippet) and `/var/log/caddy/runtime.log` (the default logger). This routes Caddy's logs **out of `docker logs`/Scaleway Cockpit**; the rolled files remain on disk as a local fallback.
+- **api** emits logs **natively over OTLP** (via `slog`) straight to the collector, and mirrors them as **JSON on stdout** — captured by its `s6-log` pipeline as a fallback (not tailed by the collector, to avoid double-sending).
 - **Supervised services** each have a dedicated `s6-log` pipeline (`producer-for` / `consumer-for`, grouped into a `*-pipeline` bundle via `pipeline-name`) that writes a rotating `current` file as `nobody`:
 
-| Service | Log file               |
-| ------- | ---------------------- |
-| api     | `/var/log/api/current` |
+| Service          | s6-log file                      |
+| ---------------- | -------------------------------- |
+| api              | `/var/log/api/current`           |
+| otel-collector   | `/var/log/otel-collector/current`|
 
-Rotation keeps 20 archives, rolling at ~1 MiB (`n20 s1000000`). The directory is created + chowned in the Dockerfile.
+Rotation keeps 20 archives, rolling at ~1 MiB (`n20 s1000000`). Log directories are created (and, for `nobody`-owned ones, chowned) in the Dockerfile.
 
 ## Resource limits (prepared, disabled)
 
