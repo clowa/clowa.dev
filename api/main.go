@@ -7,6 +7,7 @@ package main
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -33,6 +34,36 @@ func listenAddr() string {
 }
 
 func main() {
+	// All the real work lives in run so its deferred cleanup — notably the
+	// telemetry flush — actually executes. log.Fatal calls os.Exit, which skips
+	// defers, so the top level only logs a fatal error run itself could not.
+	if err := run(); err != nil {
+		log.Fatalf("api: %v", err)
+	}
+}
+
+// run wires up telemetry and the HTTP server, blocks until a shutdown signal or a
+// fatal server error, then drains in-flight requests and flushes telemetry. It
+// returns an error instead of calling log.Fatal so its defers (the OTel flush)
+// run on every exit path.
+func run() error {
+	// Telemetry first, so the server and its otelgin middleware export from the
+	// first request. Driven entirely by OTEL_* env vars; a no-op when the
+	// endpoint is unset (local dev). See otel.go.
+	otelShutdown, err := setupOTel(context.Background())
+	if err != nil {
+		return fmt.Errorf("otel setup: %w", err)
+	}
+	// Flush and release the providers on the way out. Uses a fresh timeout so the
+	// export still gets a chance even when run returns because of an error.
+	defer func() {
+		ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
+		defer cancel()
+		if err := otelShutdown(ctx); err != nil {
+			log.Printf("api otel shutdown error: %v", err)
+		}
+	}()
+
 	// StaticRepository today; swap for a PostgresRepository here once the
 	// database exists — the rest of the wiring stays the same.
 	repo := quote.NewStaticRepository()
@@ -44,7 +75,7 @@ func main() {
 		ReadHeaderTimeout: 5 * time.Second,
 	}
 
-	// Serve in the background so main can block on shutdown signals.
+	// Serve in the background so run can block on shutdown signals.
 	serverErr := make(chan error, 1)
 	go func() {
 		log.Printf("api listening on %s", srv.Addr)
@@ -59,7 +90,7 @@ func main() {
 
 	select {
 	case err := <-serverErr:
-		log.Fatalf("api server error: %v", err)
+		return fmt.Errorf("server error: %w", err)
 	case sig := <-stop:
 		log.Printf("api received %s, shutting down", sig)
 	}
@@ -67,7 +98,8 @@ func main() {
 	ctx, cancel := context.WithTimeout(context.Background(), shutdownTimeout)
 	defer cancel()
 	if err := srv.Shutdown(ctx); err != nil {
-		log.Fatalf("api shutdown error: %v", err)
+		return fmt.Errorf("shutdown: %w", err)
 	}
 	log.Println("api stopped")
+	return nil
 }
