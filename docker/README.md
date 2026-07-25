@@ -75,6 +75,13 @@ Rotation keeps 20 archives, rolling at ~1 MiB (`n20 s1000000`). Log directories 
 - **Caddy (`CMD`)** — bounded by the container/cgroup limits (`cpuLimit` / `memoryLimit` in [`serverless.yml`](../serverless.yml)). To apply per-process rlimits instead, wrap the `CMD` with `s6-softlimit` (a commented example sits next to the `CMD` in the Dockerfile).
 - **Supervised services** — each `run` script has a commented `s6-softlimit` wrapper (POSIX rlimits — effective for memory on single-process daemons; there is no rlimit for CPU share, so use container limits for CPU).
 
+## Running as non-root (deferred)
+
+The `api` and `otel-collector` longruns currently **run as root** (bare `exec` in their `run` scripts); only the `s6-log` sinks already drop to `nobody` (see [Logging](#logging)). Deferred because production runs in a Scaleway microVM (`sandbox: v2` in [`serverless.yml`](../serverless.yml)), which isolates the container regardless.
+
+- **api** has no reason to be root — wrap its `run` with `s6-setuidgid nobody` to drop it.
+- **otel-collector** runs as root specifically to read Caddy's root-owned `/var/log/caddy/*.log` (noted in its `run` header). Dropping it first requires making those files group-readable (adjust the `/var/log/caddy` `mkdir`/`chmod`/`chown` in the Dockerfile).
+
 ## The `api` service
 
 The `api` (Go source in [`../api`](../api), binary at `/usr/local/bin/api`) is a
