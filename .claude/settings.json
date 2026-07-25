@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "WebSearch",
+      "WebFetch(domain:caddyserver.com)",
+      "WebFetch(domain:cli.scaleway.com)",
+      "WebFetch(domain:www.scaleway.com)",
+      "WebFetch(domain:opentelemetry.io)",
+      "WebFetch(domain:docs.astro.build)",
+      "Bash(go test *)",
+      "Bash(go vet *)",
+      "Bash(go mod *)"
+    ]
+  },
+  "sandbox": {
+    "enabled": true,
+    "autoAllowBashIfSandboxed": false
+  },
+  "enabledMcpjsonServers": [
+    "astro-docs"
+  ]
+}
