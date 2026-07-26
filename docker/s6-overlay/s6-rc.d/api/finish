@@ -1,0 +1,24 @@
+#!/command/with-contenv sh
+# The api is a CRITICAL service: a crash must take the whole container down so
+# the orchestrator reschedules it (Caddy, the CMD, does this natively when it
+# exits).
+#
+# The api exits 0 ONLY on a clean SIGTERM/SIGINT shutdown (see api/main.go), so a
+# zero exit is never a crash. Bail out in that case: this finish script runs on
+# EVERY api exit — including when s6 stops the api during a normal or a
+# Caddy-triggered shutdown — and writing the exit code unconditionally would
+# clobber the container's real exit code (e.g. mask a Caddy CMD crash as 0).
+#
+#   $1 = exit code, or 256 if terminated by a signal
+#   $2 = signal number (only meaningful when $1 == 256)
+[ "$1" -eq 0 ] && exit 0
+
+# Crash (non-zero exit or killed by a signal): propagate a meaningful code and
+# bring the whole container down.
+if [ "$1" -eq 256 ]; then
+	echo $((128 + $2)) >/run/s6-linux-init-container-results/exitcode
+else
+	echo "$1" >/run/s6-linux-init-container-results/exitcode
+fi
+
+exec /run/s6/basedir/bin/halt

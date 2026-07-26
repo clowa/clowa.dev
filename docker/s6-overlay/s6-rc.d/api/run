@@ -1,0 +1,15 @@
+#!/command/with-contenv sh
+# The Go web API (source in /api, binary at /usr/local/bin/api).
+# Listens on loopback only; Caddy reverse_proxies /api/* to 127.0.0.1:8080.
+exec 2>&1
+
+# Per-process service name: the container-wide OTEL_SERVICE_NAME (serverless.yml)
+# is Caddy's (web-proxy); override it here so the api's telemetry reports as
+# quote-api. All other OTEL_* vars are inherited.
+export OTEL_SERVICE_NAME=quote-api
+
+# --- Resource limits (disabled) — see docker/README.md -----------------------
+# exec s6-softlimit -m 268435456 \
+#   /usr/local/bin/api
+
+exec /usr/local/bin/api

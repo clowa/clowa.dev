@@ -1,0 +1,11 @@
+#!/command/with-contenv sh
+# The OpenTelemetry Collector: the container's single telemetry egress. It
+# receives OTLP from Caddy and the api on loopback, tails Caddy's JSON logs
+# (/var/log/caddy), and forwards traces/metrics/logs to Middleware. Runs as root
+# so it can read Caddy's root-owned log files.
+#
+# Supporting (restart-only) service: it ships NO finish script, so s6-supervise
+# just restarts it in place if it dies — telemetry is not container-critical.
+exec 2>&1
+
+exec /usr/local/bin/otelcol --config /etc/otel-collector/config.yaml

@@ -1,0 +1,125 @@
+# OpenTelemetry Collector config for the clowa.dev container.
+#
+# The collector is the single telemetry egress: it receives OTLP from Caddy and
+# the Go api over loopback, tails Caddy's JSON logs (Caddy has no native OTLP log
+# export), and forwards traces/metrics/logs to Middleware over OTLP/gRPC. It is
+# the only process that holds the Middleware API key, so the in-container
+# producers stay agentless and secret-free.
+#
+# ${env:...} values are supplied by serverless.yml (MIDDLEWARE_OTLP_ENDPOINT as a
+# plain env var, MIDDLEWARE_API_KEY as a Scaleway secret).
+
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 127.0.0.1:4317
+      http:
+        endpoint: 127.0.0.1:4318
+
+  file_log:
+    include:
+      - /var/log/caddy/*.log
+    # Caddy writes one JSON object per line. Parse it, map the level to a severity,
+    # and lift the traceID/spanID the tracing directive injects so Caddy access
+    # logs correlate with Caddy spans. Timestamps are left to the collector's
+    # observed time (Caddy's float `ts` stays available as an attribute); records
+    # ship in near real time, so the small skew is immaterial.
+    operators:
+      - type: json_parser
+      - type: severity_parser
+        parse_from: attributes.level
+        mapping:
+          debug: debug
+          info: info
+          warn: warn
+          error: error
+          fatal: panic
+      # Only request (access) lines carry trace ids; guard so runtime lines don't
+      # error on the missing field.
+      - type: trace_parser
+        if: attributes.traceID != nil
+        trace_id:
+          parse_from: attributes.traceID
+        span_id:
+          parse_from: attributes.spanID
+      # Strip visitor-IP-bearing request headers before export. With no
+      # trusted_proxies in Caddy, remote_ip/client_ip are the Scaleway edge (not a
+      # visitor, so retained); the real visitor IP only rides in X-Forwarded-For /
+      # X-Real-Ip. Removing them here keeps the visitor IP out of Middleware — it
+      # still lands transiently in the on-disk access.log, which never leaves the
+      # container. The guards skip runtime.log lines (no request object), which
+      # would otherwise trip the remove operator's missing-field error.
+      - type: remove
+        if: 'attributes.request != nil and attributes.request.headers != nil and attributes.request.headers["X-Forwarded-For"] != nil'
+        field: attributes.request.headers["X-Forwarded-For"]
+      - type: remove
+        if: 'attributes.request != nil and attributes.request.headers != nil and attributes.request.headers["X-Real-Ip"] != nil'
+        field: attributes.request.headers["X-Real-Ip"]
+
+processors:
+  # Refuse data instead of OOM-killing the container when memory is tight.
+  memory_limiter:
+    check_interval: 1s
+    limit_mib: 80
+    spike_limit_mib: 20
+
+  # host.* attributes for Middleware host association; override:false so it never
+  # clobbers the service.* the producers already set.
+  resource_detection:
+    detectors: [env, system]
+    timeout: 2s
+    override: false
+    system:
+      hostname_sources: [os]
+
+  # Caddy's filelog records have no service.name (filelog can't know it); stamp it
+  # so those logs group under the web-proxy service like Caddy's OTLP spans/metrics.
+  resource/caddy:
+    attributes:
+      - key: service.name
+        value: web-proxy
+        action: upsert
+
+  # Middleware routes ingested data by this attribute (mirrors the auth key).
+  resource/middleware:
+    attributes:
+      - key: mw.account_key
+        value: ${env:MIDDLEWARE_API_KEY}
+        action: upsert
+
+  batch:
+    send_batch_size: 512
+    timeout: 5s
+
+exporters:
+  # gRPC + TLS to Middleware; the https:// scheme enables TLS. The bare API key
+  # goes in the authorization header (no Bearer/Basic prefix).
+  otlp_grpc/middleware:
+    endpoint: ${env:MIDDLEWARE_OTLP_ENDPOINT}
+    headers:
+      authorization: ${env:MIDDLEWARE_API_KEY}
+
+service:
+  telemetry:
+    logs:
+      encoding: json
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [memory_limiter, resource_detection, resource/middleware, batch]
+      exporters: [otlp_grpc/middleware]
+    metrics:
+      receivers: [otlp]
+      processors: [memory_limiter, resource_detection, resource/middleware, batch]
+      exporters: [otlp_grpc/middleware]
+    # OTLP logs (the Go api) keep the service.name they arrive with (quote-api).
+    logs:
+      receivers: [otlp]
+      processors: [memory_limiter, resource_detection, resource/middleware, batch]
+      exporters: [otlp_grpc/middleware]
+    # Caddy's file logs get service.name=web-proxy before shipping.
+    logs/caddy:
+      receivers: [file_log]
+      processors: [memory_limiter, resource/caddy, resource_detection, resource/middleware, batch]
+      exporters: [otlp_grpc/middleware]

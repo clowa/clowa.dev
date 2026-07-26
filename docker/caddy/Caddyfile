@@ -1,0 +1,90 @@
+{
+	# TLS is terminated upstream (Scaleway edge; `httpOption: redirected` also does
+	# the http->https redirect there). Caddy only ever speaks plain HTTP on :80, so
+	# automatic HTTPS/ACME must stay off — otherwise Caddy would try to provision
+	# certs for every host below and fail behind the proxy.
+	auto_https off
+
+	# Caddy has no native OTLP log export, so its runtime/error logs are written as
+	# JSON to a file that the in-container otel-collector tails (filelog receiver)
+	# and forwards. Routing the default logger to a file takes these out of
+	# stdout/`docker logs`; the rolled file stays on disk as a local fallback. The
+	# per-site access log is configured separately in the (otel) snippet below.
+	log {
+		output file /var/log/caddy/runtime.log {
+			roll_size 5MiB
+			roll_keep 3
+		}
+		format json
+	}
+
+	# Push Caddy's runtime metrics (request counts, latencies, status codes, Go
+	# runtime, etc.) via OTLP to the in-container otel-collector, which forwards
+	# them to Middleware. Endpoint and protocol come from the standard
+	# OTEL_EXPORTER_OTLP_* env vars (see serverless.yml). When those are unset
+	# (local runs) Caddy still serves normally; only the periodic metric export
+	# fails in the background. Requires Caddy >= 2.11.3 for `otlp`.
+	metrics {
+		otlp
+	}
+}
+
+# --- OpenTelemetry per-site instrumentation ----------------------------------
+# Imported by every site and redirect block so all pages (Astro + redirects) are
+# traced and access-logged uniformly:
+#   - tracing wraps the handler chain in a span and, via the OTEL_EXPORTER_OTLP_*
+#     env vars, exports it; it also injects traceID/spanID into the access log.
+#   - log writes JSON access logs to a file the otel-collector tails; keeping one
+#     shared file (Caddy dedups writers by filename) puts every host in one place.
+(otel) {
+	tracing {
+		span {http.request.method}
+	}
+	log {
+		output file /var/log/caddy/access.log {
+			roll_size 5MiB
+			roll_keep 3
+		}
+		format json
+	}
+}
+
+# --- Security response headers -----------------------------------------------
+# Imported by the primary web hosts (the Astro site and the me./www. redirects).
+# Host-scoped via @app so importing it into the catch-all `:80` site block only
+# affects clowa.dev — not the raw Scaleway URL, localhost, or other hosts this
+# container may serve. HSTS is intentionally clowa.dev-only (@hsts): subdomains
+# are not covered, so no includeSubDomains/preload.
+(security) {
+	@app host clowa.dev me.clowa.de www.clowa.dev
+	header @app {
+		# Drop the version-fingerprinting Server header.
+		-Server
+		# Block MIME-type sniffing.
+		X-Content-Type-Options "nosniff"
+		# Disallow framing (clickjacking); frame-ancestors below is the modern form.
+		X-Frame-Options "DENY"
+		# Send only the origin on cross-origin navigations.
+		Referrer-Policy "strict-origin-when-cross-origin"
+		# 'unsafe-inline' is required: Astro inlines a small hoisted script and
+		# scoped/Shiki styles, whose per-build hashes can't be pinned in a static
+		# header. Rybbit is the analytics script/beacon; jsDelivr serves Pico.css
+		# on the blog/legal pages. Everything else is same-origin.
+		Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' https://app.rybbit.io; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self'; font-src 'self'; connect-src 'self' https://app.rybbit.io; object-src 'none'; base-uri 'self'; frame-ancestors 'none'; form-action 'self'"
+	}
+	# TLS is terminated at the Scaleway edge; the browser still honours HSTS sent
+	# over the proxied connection. clowa.dev only (no includeSubDomains/preload).
+	@hsts host clowa.dev
+	header @hsts Strict-Transport-Security "max-age=31536000"
+}
+
+# --- Hosted content ----------------------------------------------------------
+# One file per served site. These configs only serve content; keep redirect
+# logic out of here so the two concerns stay cleanly separated on disk.
+import /etc/caddy/sites/*.caddy
+
+# --- Redirects ---------------------------------------------------------------
+# One file per redirect source host (domain->domain 301s, path redirects, ...).
+# Kept separate from sites/ so redirect rules never get tangled up with the
+# static-site configuration.
+import /etc/caddy/redirects/*.caddy

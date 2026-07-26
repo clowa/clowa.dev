@@ -1,0 +1,39 @@
+# OpenTelemetry Collector Builder (ocb) manifest.
+#
+# Builds a *minimal* collector containing only the components this container
+# needs, instead of shipping the ~200 MB contrib distribution. The result is a
+# small static binary compiled in the Dockerfile's otelcol-builder stage.
+#
+# Component versions track a single collector release; keep them in lockstep when
+# bumping (beta modules share v0.157.0, the stable confmap providers use v1.63.0).
+dist:
+  name: otelcol
+  description: Minimal OpenTelemetry Collector for the clowa.dev container
+  output_path: ./_build
+  version: 0.157.0
+
+receivers:
+  # OTLP from Caddy and the Go api over loopback.
+  - gomod: go.opentelemetry.io/collector/receiver/otlpreceiver v0.157.0
+  # Tails Caddy's JSON access/runtime logs (Caddy has no native OTLP log export).
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/receiver/filelogreceiver v0.157.0
+
+processors:
+  # Guard rails + throughput for a memory-constrained container.
+  - gomod: go.opentelemetry.io/collector/processor/memorylimiterprocessor v0.157.0
+  - gomod: go.opentelemetry.io/collector/processor/batchprocessor v0.157.0
+  # Fills in host.* resource attributes.
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor v0.157.0
+  # Upserts Middleware's routing attribute (mw.account_key).
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.157.0
+
+exporters:
+  # Ships everything to Middleware over OTLP/gRPC.
+  - gomod: go.opentelemetry.io/collector/exporter/otlpexporter v0.157.0
+  # Available (not wired by default) for local troubleshooting.
+  - gomod: go.opentelemetry.io/collector/exporter/debugexporter v0.157.0
+
+providers:
+  # ${env:...} substitution (secrets/endpoint) and file:// config loading.
+  - gomod: go.opentelemetry.io/collector/confmap/provider/envprovider v1.63.0
+  - gomod: go.opentelemetry.io/collector/confmap/provider/fileprovider v1.63.0

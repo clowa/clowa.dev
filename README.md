@@ -1,10 +1,12 @@
 # Overview
 
-This is my personal website. It is built using [Astro](https://astro.build/) and hosted as a container. Go and check it out at [https://clowa.dev](https://clowa.dev).
+This is my personal website project. It is built using [Astro](https://astro.build/) and hosted as a monolithic container on [Scaleway Cloud](https://www.scaleway.com). Go and check it out at [https://clowa.dev](https://clowa.dev).
 
 ## Repository Structure
 
 - `swa/` — Frontend code of the website (Astro)
+- `api/` — Go backend service (serves `/api/*`, e.g. `GET /api/quote`)
+- `docker/` - Configuration of the monolithic docker container
 
 ## Getting Started
 
@@ -28,6 +30,24 @@ For simplicity you can use the provided [Taskfile](https://taskfile.dev/) to run
 
 - Builds the static site to `swa/dist/`
 
+## Architecture
+
+The project ships as a single container image whose **two content-serving technical components** together deliver **three logical components**, alongside a supporting OpenTelemetry Collector for observability.
+
+**Logical components** — what the site is made of:
+
+| # | Component | What it is | Lives in |
+| - | --------- | ---------- | -------- |
+| 1 | Static website | The [Astro](https://astro.build/) site (pages, assets), pre-built to static files | [`swa/`](swa/) |
+| 2 | REST API | A [Gin](https://gin-gonic.com/) + Go service serving dynamic content (`GET /api/quote`) | [`api/`](api/) |
+| 3 | Redirects | Domain → domain 301 rules (one file per source host) | [`docker/caddy/redirects/`](docker/caddy/redirects/) |
+
+**Technical components** — the processes that run inside the container:
+
+- **[Caddy](https://caddyserver.com/)** — the web server. Serves the static files, reverse-proxies the API, and performs the redirects. It runs as the container's primary process.
+- **Go REST API** — a single static binary that serves the dynamic content. It is served through caddy.
+- **[OpenTelemetry Collector](https://opentelemetry.io/docs/collector/)** — a supporting process that gathers traces, metrics, and logs from the other two and forwards them to [Middleware](https://middleware.io). See `AGENTS.md` → Observability.
+
 ## Lessons Learned
 
 See [LESSONS_LEARNED.md](LESSONS_LEARNED.md).
@@ -38,3 +58,4 @@ See [LESSONS_LEARNED.md](LESSONS_LEARNED.md).
 - [Scaleway - Serverless Framework Plugin](https://github.com/scaleway/serverless-scaleway-functions)
 - [Scaleway - Serverless Container Custom Domain](https://www.scaleway.com/en/docs/serverless-containers/how-to/add-a-custom-domain-to-a-container/)
 - [Scaleway - Serverless Container Limitations](https://www.scaleway.com/en/docs/serverless-containers/reference-content/containers-limitations/)
+- [S6-overlay - container native process manager](https://github.com/just-containers/s6-overlay#verifying-downloads)
