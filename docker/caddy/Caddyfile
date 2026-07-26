@@ -45,7 +45,17 @@
 			roll_size 5MiB
 			roll_keep 3
 		}
-		format json
+		# Drop the request headers that carry the visitor IP before the line is
+		# written, so it never reaches the on-disk log, the collector, or Middleware
+		# (privacy.md promises this). The plain json encoder logs the full header
+		# map; the filter encoder still writes json but omits these fields entirely.
+		# remote_ip/client_ip are the loopback Scaleway edge, so they need no masking.
+		format filter {
+			request>headers>X-Forwarded-For delete
+			request>headers>X-Real-Ip delete
+			request>headers>Forwarded delete
+			request>headers>X-Envoy-External-Address delete
+		}
 	}
 }
 
