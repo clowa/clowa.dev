@@ -30,7 +30,7 @@ custom:
         OTEL_TRACES_SAMPLER: parentbased_traceidratio
         OTEL_TRACES_SAMPLER_ARG: "0.1" # sample 10% of traces to control cost
         # Where the collector forwards telemetry (non-secret): Middleware, gRPC+TLS.
-        MIDDLEWARE_OTLP_ENDPOINT: https://clowa-production.middleware.io:443
+        MIDDLEWARE_OTLP_ENDPOINT: https://cedric-ahlers.middleware.io:443 # TODO: update to https://clowa-production.middleware.io:443
       # Scaleway "extra-secure" env var: the Middleware API key. Never committed —
       # resolved from the deploy environment (CI secret / 1Password). The collector
       # sends it as the bare `authorization` header and as the mw.account_key attr.
