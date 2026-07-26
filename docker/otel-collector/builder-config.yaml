@@ -26,6 +26,8 @@ processors:
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourcedetectionprocessor v0.157.0
   # Upserts Middleware's routing attribute (mw.account_key).
   - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/resourceprocessor v0.157.0
+  # Drops the visitor-IP span attribute (client.address) before export.
+  - gomod: github.com/open-telemetry/opentelemetry-collector-contrib/processor/transformprocessor v0.157.0
 
 exporters:
   # Ships everything to Middleware over OTLP/gRPC.

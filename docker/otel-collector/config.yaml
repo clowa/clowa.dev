@@ -43,19 +43,12 @@ receivers:
           parse_from: attributes.traceID
         span_id:
           parse_from: attributes.spanID
-      # Strip visitor-IP-bearing request headers before export. With no
-      # trusted_proxies in Caddy, remote_ip/client_ip are the Scaleway edge (not a
-      # visitor, so retained); the real visitor IP only rides in X-Forwarded-For /
-      # X-Real-Ip. Removing them here keeps the visitor IP out of Middleware — it
-      # still lands transiently in the on-disk access.log, which never leaves the
-      # container. The guards skip runtime.log lines (no request object), which
-      # would otherwise trip the remove operator's missing-field error.
-      - type: remove
-        if: 'attributes.request != nil and attributes.request.headers != nil and attributes.request.headers["X-Forwarded-For"] != nil'
-        field: attributes.request.headers["X-Forwarded-For"]
-      - type: remove
-        if: 'attributes.request != nil and attributes.request.headers != nil and attributes.request.headers["X-Real-Ip"] != nil'
-        field: attributes.request.headers["X-Real-Ip"]
+      # The visitor-IP-bearing request headers (X-Forwarded-For, X-Real-Ip,
+      # Forwarded, X-Envoy-External-Address) are deleted at the Caddy source (the
+      # (otel) log filter in the Caddyfile), so they are absent from both the
+      # parsed attributes and the raw line body by the time the collector reads
+      # them — nothing to strip here. remote_ip/client_ip are the loopback
+      # Scaleway edge, not a visitor.
 
 processors:
   # Refuse data instead of OOM-killing the container when memory is tight.
@@ -88,6 +81,17 @@ processors:
         value: ${env:MIDDLEWARE_API_KEY}
         action: upsert
 
+  # Drop the visitor IP from spans. Caddy's tracing sets client.address from the
+  # X-Forwarded-For header (the real visitor IP) and exposes no way to suppress
+  # it, so delete it here — centrally, before export — on every span (web-proxy
+  # today; also covers quote-api should it ever see a real IP).
+  transform/scrub_client_ip:
+    error_mode: ignore
+    trace_statements:
+      - context: span
+        statements:
+          - delete_key(attributes, "client.address")
+
   batch:
     send_batch_size: 512
     timeout: 5s
@@ -107,7 +111,7 @@ service:
   pipelines:
     traces:
       receivers: [otlp]
-      processors: [memory_limiter, resource_detection, resource/middleware, batch]
+      processors: [memory_limiter, transform/scrub_client_ip, resource_detection, resource/middleware, batch]
       exporters: [otlp_grpc/middleware]
     metrics:
       receivers: [otlp]
