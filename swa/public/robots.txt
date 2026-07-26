@@ -7,6 +7,7 @@ User-agent: ClaudeBot
 User-agent: Google-Extended
 User-agent: GPTBot
 User-agent: xAI-Grok
+User-agent: Amazonbot
 Disallow: /
 
 ## Scrapers
