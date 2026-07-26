@@ -3,5 +3,7 @@
 # NOTE: for this to reach Caddy in production, `www.clowa.dev` must also be
 # attached as a custom_domain in serverless.yml (and its DNS pointed at Scaleway).
 www.clowa.dev:80 {
+	import otel
+	import security
 	redir https://clowa.dev{uri} permanent
 }

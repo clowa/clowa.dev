@@ -32,7 +32,7 @@ For simplicity you can use the provided [Taskfile](https://taskfile.dev/) to run
 
 ## Architecture
 
-The project ships as a single container image made up of **two technical components** that together deliver **three logical components**.
+The project ships as a single container image whose **two content-serving technical components** together deliver **three logical components**, alongside a supporting OpenTelemetry Collector for observability.
 
 **Logical components** — what the site is made of:
 
@@ -46,6 +46,7 @@ The project ships as a single container image made up of **two technical compone
 
 - **[Caddy](https://caddyserver.com/)** — the web server. Serves the static files, reverse-proxies the API, and performs the redirects. It runs as the container's primary process.
 - **Go REST API** — a single static binary that serves the dynamic content. It is served through caddy.
+- **[OpenTelemetry Collector](https://opentelemetry.io/docs/collector/)** — a supporting process that gathers traces, metrics, and logs from the other two and forwards them to [Middleware](https://middleware.io). See `AGENTS.md` → Observability.
 
 ## Lessons Learned
 

@@ -1,12 +1,5 @@
 type LogLevel = 'INFO' | 'WARN' | 'ERROR' | 'DEBUG'
 
-// interface LogEntry {
-//   level: LogLevel
-//   timestamp: string
-//   message: string
-//   details?: unknown
-// }
-
 class Logger {
   private isDevelopment = typeof process !== 'undefined' && process.env.NODE_ENV === 'development'
 

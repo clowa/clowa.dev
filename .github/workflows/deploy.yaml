@@ -79,7 +79,7 @@ jobs:
           SCW_SECRET_KEY: ${{ secrets.SCW_SECRET_KEY }}
           SCW_DEFAULT_PROJECT_ID: ${{ secrets.SCW_PROJECT_ID }}
           REGISTRY_IMAGE: ${{ env.REGISTRY }}/${{ env.REGISTRY_NAMESPACE }}/${{ env.IMAGE_NAME }}:${{ needs.build.outputs.image_tag }}
-          # Grafana Cloud OTLP Basic-auth header, injected as a Scaleway secret env var
-          # by serverless.yml. Format: "Authorization=Basic <base64(instanceID:apiKey)>".
-          OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.GRAFANA_CLOUD_OTEL_AUTH_HEADER }}
+          # Middleware API key, injected as a Scaleway secret env var by
+          # serverless.yml; the in-container otel-collector authenticates with it.
+          MIDDLEWARE_API_KEY: ${{ secrets.MIDDLEWARE_API_KEY }}
         run: ./node_modules/.bin/serverless deploy

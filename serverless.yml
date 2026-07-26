@@ -17,24 +17,28 @@ custom:
     clw-web-prod:
       registryImage: ${env:REGISTRY_IMAGE}
 
-      # OpenTelemetry: Caddy exports traces + metrics directly to Grafana Cloud
-      # (agentless, no collector). Non-secret config lives here; the auth header
-      # is injected as a Scaleway secret (below) at deploy time.
+      # OpenTelemetry: every process (Caddy + the api) exports OTLP to the
+      # in-container otel-collector on loopback; the collector is the sole egress
+      # to Middleware and the only holder of the API key (below). Standard OTEL_*
+      # vars keep this backend-agnostic. OTEL_SERVICE_NAME here is Caddy's; the api
+      # overrides it to quote-api in its s6 run script.
       env:
-        OTEL_SERVICE_NAME: web
-        OTEL_EXPORTER_OTLP_ENDPOINT: https://otlp-gateway-prod-eu-west-2.grafana.net/otlp
-        OTEL_EXPORTER_OTLP_PROTOCOL: http/protobuf
+        OTEL_SERVICE_NAME: web-proxy
+        OTEL_EXPORTER_OTLP_ENDPOINT: http://127.0.0.1:4317
+        OTEL_EXPORTER_OTLP_PROTOCOL: grpc
         OTEL_RESOURCE_ATTRIBUTES: service.namespace=clowa,deployment.environment.name=production
         OTEL_TRACES_SAMPLER: parentbased_traceidratio
         OTEL_TRACES_SAMPLER_ARG: "0.1" # sample 10% of traces to control cost
-      # Scaleway "extra-secure" env var: the Grafana Cloud Basic-auth header. Never
-      # committed — resolved from the deploy environment (CI secret / 1Password).
-      # Value format: "Authorization=Basic <base64(instanceID:apiKey)>".
+        # Where the collector forwards telemetry (non-secret): Middleware, gRPC+TLS.
+        MIDDLEWARE_OTLP_ENDPOINT: https://cedric-ahlers.middleware.io:443 # TODO: update to https://clowa-production.middleware.io:443
+      # Scaleway "extra-secure" env var: the Middleware API key. Never committed —
+      # resolved from the deploy environment (CI secret / 1Password). The collector
+      # sends it as the bare `authorization` header and as the mw.account_key attr.
       secret:
-        OTEL_EXPORTER_OTLP_HEADERS: ${env:OTEL_EXPORTER_OTLP_HEADERS}
+        MIDDLEWARE_API_KEY: ${env:MIDDLEWARE_API_KEY}
 
-      cpuLimit: 70
-      memoryLimit: 128
+      cpuLimit: 250
+      memoryLimit: 512
       sandbox: v2
       port: 80
 

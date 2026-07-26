@@ -3,5 +3,6 @@
 # NOTE: for this to reach Caddy in production, `qunis.day` must also be attached
 # as a custom_domain in serverless.yml (and its DNS pointed at Scaleway).
 qunis.day:80 {
+	import otel
 	redir https://qunisday.qunis.de{uri} permanent
 }
