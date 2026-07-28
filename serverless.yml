@@ -37,8 +37,8 @@ custom:
       secret:
         MIDDLEWARE_API_KEY: ${env:MIDDLEWARE_API_KEY}
 
-      cpuLimit: 250
-      memoryLimit: 512
+      cpuLimit: 100
+      memoryLimit: 256
       sandbox: v2
       port: 80
 
