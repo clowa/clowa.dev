@@ -4,5 +4,5 @@
 # as a custom_domain in serverless.yml (and its DNS pointed at Scaleway).
 qunis.day:80 {
 	import otel
-	redir https://qunisday.qunis.de{uri} permanent
+	redir https://qunisday.qunis.de/infoseite permanent
 }
