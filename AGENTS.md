@@ -30,12 +30,19 @@ Caddy config lives in `docker/caddy/`: `Caddyfile` imports `sites/*.caddy` (host
 - `task init-devcontainer` — run once in a fresh devcontainer/codespace (fixes `swa/node_modules` perms + `npm install`).
 - In `swa/`: `npm run build` = `astro check && astro build` (build is also the type-check); `npm run typecheck` is `astro check` alone. Quality tooling: `npm run lint` (ESLint + Stylelint), `npm run lint:fix`, `npm run format` / `format:check` (Prettier), `npm run lint:md` (markdownlint, repo-wide).
 
-## Conventions
+## Development conventions
+
+### General
+
+- **Markdown** is owned entirely by markdownlint (`.markdownlint.yaml`; MD013 off; `ul` markers 1-space single / 2-space multi).
+- **Pre-commit**: `lint-staged` config exists (`swa/.lintstagedrc.json`), but **no local git hook is currently wired** — `swa/package.json`'s `prepare` points at a not-yet-present `scripts/setup-hooks.mjs`, so it is a no-op. **CI is the enforced quality gate.**
+
+### Astro `swa/`
 
 - **Formatting** is owned by Prettier (`swa/.prettierrc.mjs`, `prettier-plugin-astro`) for `.astro`/`.ts`/`.css`/`.json`/`.yaml`. Prettier ignores `*.md`.
 - **Linting** is correctness-only — stylistic rules are turned off via `eslint-config-prettier` (loaded last). ESLint flat config (`swa/eslint.config.mjs`): `typescript-eslint` + `eslint-plugin-astro`. Stylelint: `swa/.stylelintrc.json`. Astro **a11y rules are intentionally off** for now (blocked on `eslint-plugin-jsx-a11y` supporting ESLint 10).
-- **Markdown** is owned entirely by markdownlint (`.markdownlint.yaml`; MD013 off; `ul` markers 1-space single / 2-space multi).
-- **Pre-commit**: `lint-staged` config exists (`swa/.lintstagedrc.json`), but **no local git hook is currently wired** — `swa/package.json`'s `prepare` points at a not-yet-present `scripts/setup-hooks.mjs`, so it is a no-op. **CI is the enforced quality gate.**
+
+### API `api/`
 
 ## CI (`.github/workflows/`)
 
@@ -58,7 +65,20 @@ Every process is instrumented with **vendor-neutral OpenTelemetry** and exports 
 
 **Config.** Non-secret `OTEL_*` + `MIDDLEWARE_OTLP_ENDPOINT` live in [`serverless.yml`](./serverless.yml); the api overrides `OTEL_SERVICE_NAME=quote-api` in its s6 `run`. The `MIDDLEWARE_API_KEY` secret is a Scaleway extra-secure env var, sourced from the `MIDDLEWARE_API_KEY` GitHub Actions secret (CI) or 1Password (`task deploy`). Any log not emitted natively as an OTEL log (Caddy's access + runtime logs) is written as **JSON** to files the collector tails.
 
-**Local dev.** With `OTEL_EXPORTER_OTLP_ENDPOINT` unset, the api's telemetry is a no-op and Caddy's export fails quietly in the background; the collector only runs in the image.
+**Local dev.** With `OTEL_EXPORTER_OTLP_ENDPOINT` unset, the api's telemetry is a no-op and Caddy's export fails quietly in the background; the collector only runs in the image. To run the full container (including the collector) locally:
+
+```sh
+docker buildx build -t clowa/clowa.dev .; docker run -it --rm \
+  --name clowa-web \
+  -p 8080:80  \
+  -e MIDDLEWARE_OTLP_ENDPOINT=https://cedric-ahlers.middleware.io:443 \
+  -e MIDDLEWARE_API_KEY="$(op read 'op://Informatik/Middleware/bjohkfrgxqr5axh7kbjbikizpm/clowa-dev')" \
+  -e OTEL_EXPORTER_OTLP_ENDPOINT=http://localhost:4317 \
+  -e OTEL_EXPORTER_OTLP_PROTOCOL=grpc \
+  -e OTEL_SERVICE_NAME=web-proxy \
+  -e OTEL_RESOURCE_ATTRIBUTES=service.namespace=clowa,deployment.environment.name=local \
+  clowa/clowa.dev
+```
 
 ## Lessons Learned
 
